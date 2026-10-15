@@ -1,15 +1,15 @@
 {
-  "status": "aws-indexed-text-query-tested-python-deployment-pending",
+  "status": "deployed-authenticated-text-rag-verified",
   "supabase": {
     "project": "rgmftdwgvevunmvipnid",
-    "status": "access-denied-not-updated",
+    "status": "repository-data-and-doctor-memberships-verified",
     "schema": "deployment/supabase-complete.sql",
     "repositoryData": "deployment/abdm-repository-data.sql"
   },
   "aws": {
     "stackName": "clinical-abdm-storage",
     "template": "infrastructure/aws/storage-stack.json",
-    "bucket": "Use generated S3ReportBucket output; do not invent a globally unique name",
+    "bucket": "clinical-abdm-storage-evidencebucket-ekn4qgrb6rwz",
     "kms": "Use S3KmsKeyId output",
     "knowledgeBaseName": "clinical-abdm-evidence",
     "dataSourceName": "ClinicalSyntheticS3Evidence",
@@ -21,12 +21,14 @@
     "knowledgeBaseId": "LZASC0PVMX",
     "dataSourceId": "OYF0748ZJG",
     "lastIngestionJob": "E7KIRJI331",
-    "voiceOutput": "Amazon Polly; native Nova output is optional strict mode"
+    "voiceOutput": "Amazon Polly; native Nova output is optional strict mode",
+    "search": "Bedrock MANAGED knowledge base; no separate OpenSearch collection"
   },
   "hosting": {
     "vercel": {
       "name": "clinical-workspace",
-      "environment": "deployment/vercel.env.example"
+      "environment": "deployment/vercel.env.example",
+      "url": "https://zumaai.vercel.app"
     },
     "render": {
       "name": "clinical-api",
@@ -34,16 +36,18 @@
       "additionalAwsEnvironment": "deployment/render-aws.env.example",
       "build": "npm ci --include=dev",
       "start": "npm start",
-      "health": "/api/health"
+      "health": "/api/health",
+      "url": "https://zuma-clinical-api.onrender.com"
     },
     "python": {
       "name": "zuma-aws-evidence",
       "runtime": "Python",
       "environment": "deployment/python-aws.env",
       "build": "pip install .",
-      "start": "uvicorn zuma_aws.service:app --host 0.0.0.0 --port 8795",
-      "access": "private; Node clinical API verifies doctor and report-specific consent",
-      "verified": "Live text and voice workflow tested locally; deployment still required"
+      "start": "python -m zuma_aws",
+      "access": "HTTPS service endpoint with shared bearer authentication; Node verifies doctor and report-specific consent",
+      "verified": "Live text retrieval verified through Vercel, Node, Python, and AWS; GLM 5 and Nova 2.5 Sonic tested separately; model configuration redeployment pending",
+      "url": "https://zuma-aws-evidence.onrender.com"
     }
   },
   "data": {

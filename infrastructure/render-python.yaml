@@ -21,9 +21,9 @@ services:
       - key: BEDROCK_KNOWLEDGE_BASE_ID
         value: LZASC0PVMX
       - key: BEDROCK_TEXT_MODEL_ID
-        value: us.amazon.nova-2-lite-v1:0
+        value: zai.glm-5
       - key: BEDROCK_VOICE_MODEL_ID
-        value: amazon.nova-2-sonic-v1:0
+        value: amazon.nova-2-5-sonic
       - key: VOICE_OUTPUT_PROVIDER
         value: polly
       - key: POLLY_VOICE_ID
