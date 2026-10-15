@@ -1,0 +1,71 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "KnowledgeBase",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:Retrieve",
+        "bedrock:RetrieveAndGenerate",
+        "bedrock:InvokeKnowledgeBase",
+        "bedrock:StartIngestionJob",
+        "bedrock:GetIngestionJob"
+      ],
+      "Resource": "arn:aws:bedrock:us-east-1:050922968627:knowledge-base/LZASC0PVMX"
+    },
+    {
+      "Sid": "SelectedTextModel",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:us-east-1:050922968627:inference-profile/us.amazon.nova-2-lite-v1:0",
+        "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-2-lite-v1:0",
+        "arn:aws:bedrock:us-east-2::foundation-model/amazon.nova-2-lite-v1:0",
+        "arn:aws:bedrock:us-west-2::foundation-model/amazon.nova-2-lite-v1:0"
+      ]
+    },
+    {
+      "Sid": "ListEvidence",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::clinical-abdm-storage-evidencebucket-ekn4qgrb6rwz",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "evidence/*",
+            "raw/*",
+            "fhir/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadWriteEvidence",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::clinical-abdm-storage-evidencebucket-ekn4qgrb6rwz/evidence/*",
+        "arn:aws:s3:::clinical-abdm-storage-evidencebucket-ekn4qgrb6rwz/raw/*",
+        "arn:aws:s3:::clinical-abdm-storage-evidencebucket-ekn4qgrb6rwz/fhir/*"
+      ]
+    },
+    {
+      "Sid": "EvidenceEncryption",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "kms:DescribeKey"
+      ],
+      "Resource": "arn:aws:kms:us-east-1:050922968627:key/9d376e4b-2e89-45ea-be2c-ccf55709d8cf"
+    }
+  ]
+}

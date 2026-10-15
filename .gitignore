@@ -16,3 +16,4 @@ data/abdm/transfers/
 vendor/ABDM-wrapper/**/build/
 vendor/ABDM-wrapper/**/target/
 vendor/ABDM-wrapper/**/.gradle/
+deployment/*.env
