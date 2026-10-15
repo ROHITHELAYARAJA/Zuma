@@ -144,4 +144,4 @@ async def speech_answer(pcm, evidence_answer):
         file.setsampwidth(2)
         file.setframerate(rate)
         file.writeframes(audio)
-    return {**answer, "transcript": transcript, "audioBase64": base64.b64encode(wav.getvalue()).decode(), "audioContentType": "audio/wav"}
+    return {**answer, "transcript": transcript, "audioBase64": base64.b64encode(wav.getvalue()).decode(), "audioContentType": "audio/wav", "voiceProvider": provider}
