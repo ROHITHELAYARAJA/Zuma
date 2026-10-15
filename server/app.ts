@@ -19,7 +19,7 @@ const patientIdSchema = z.enum(["ravi", "meera", "arjun"]);
 const hospitalIdSchema = z.enum(["A", "B"]);
 const kindSchema = z.enum(["lab", "allergy", "medication", "note"]);
 const apiHospitals = () => process.env.HOSPITAL_DATA_PROVIDER === "api";
-const allowedOrigins = () => (process.env.APP_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8787,http://127.0.0.1:8787").split(",").map((value) => value.trim().replace(/\/+$/, ""));
+const allowedOrigins = () => [...new Set([...(process.env.APP_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8787,http://127.0.0.1:8787").split(","), "https://zumaai.vercel.app"].map(value => value.trim().replace(/\/+$/, "")).filter(value => value && !value.includes("YOUR-")))];
 
 export function createApp(options: { dbPath?: string } = {}) {
   const store = createStateStore(options);

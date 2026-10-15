@@ -25,6 +25,10 @@ class Speech(Scope):
     audioBase64: str = Field(min_length=1, max_length=1280000)
     sampleRate: int = 16000
 
+@app.api_route("/", methods=["GET", "HEAD"])
+def root():
+    return {"service": "zuma-aws-evidence", "health": "/health", "authorization": "Clinical API service key required for patient queries"}
+
 @app.get("/health")
 def health():
     return {"ok": True, "service": "zuma-aws", "awsConfigured": bool(os.environ.get("BEDROCK_KNOWLEDGE_BASE_ID")), "cloudConnectionTested": False}

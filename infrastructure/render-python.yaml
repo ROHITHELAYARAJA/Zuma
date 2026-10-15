@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: starter
     buildCommand: pip install .
-    startCommand: uvicorn zuma_aws.service:app --host 0.0.0.0 --port 8795
+    startCommand: python -m zuma_aws
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.12"
