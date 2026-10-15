@@ -1,3 +1,4 @@
+import { createAbdmRouter } from "./abdm";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -18,7 +19,7 @@ const patientIdSchema = z.enum(["ravi", "meera", "arjun"]);
 const hospitalIdSchema = z.enum(["A", "B"]);
 const kindSchema = z.enum(["lab", "allergy", "medication", "note"]);
 const apiHospitals = () => process.env.HOSPITAL_DATA_PROVIDER === "api";
-const allowedOrigins = () => (process.env.APP_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8787,http://127.0.0.1:8787").split(",").map((value) => value.trim());
+const allowedOrigins = () => (process.env.APP_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8787,http://127.0.0.1:8787").split(",").map((value) => value.trim().replace(/\/+$/, ""));
 
 export function createApp(options: { dbPath?: string } = {}) {
   const store = createStateStore(options);
@@ -99,6 +100,8 @@ export function createApp(options: { dbPath?: string } = {}) {
     await next();
   });
   app.route("/api/platform", platformRouter);
+  app.route("/api/abdm", createAbdmRouter({ getSession, persist }));
+  app.get("/", c => c.json({ service: "zuma-clinical-api", health: "/api/health", website: "https://zumaai.vercel.app" }));
   app.get("/api/health", (c) => c.json({ ok: true, mode: "synthetic-demo", storage: store.provider, authProvider: authProvider(), cloudConnected: false, fhirValidation: "local-structural-checks" }));
   app.get("/api/auth/config", (c) => c.json({ provider: authProvider(), supabaseConfigured: supabaseConfigured(), syntheticOnly: true }));
   app.post("/api/auth/login", async (c) => {

@@ -25,7 +25,7 @@ export async function retrieveKnowledgeEvidence(input: { question: string; patie
     const result = await client.send(new RetrieveCommand({
       knowledgeBaseId,
       retrievalQuery: { text: input.question },
-      retrievalConfiguration: { vectorSearchConfiguration: { numberOfResults: 20, filter } },
+      retrievalConfiguration: process.env.BEDROCK_KB_MODE === "customer" ? { vectorSearchConfiguration: { numberOfResults: 20, filter } } : { managedSearchConfiguration: { numberOfResults: 20, filter } },
     }), { abortSignal: AbortSignal.timeout(30000) });
     const candidates = result.retrievalResults ?? [];
     const matched = new Map<string, { id: string; text: string }>();

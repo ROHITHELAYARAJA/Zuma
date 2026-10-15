@@ -17,3 +17,6 @@ vendor/ABDM-wrapper/**/build/
 vendor/ABDM-wrapper/**/target/
 vendor/ABDM-wrapper/**/.gradle/
 deployment/*.env
+.venv/
+__pycache__/
+*.egg-info/

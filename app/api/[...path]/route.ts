@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 180;
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const { path } = await context.params;
@@ -22,7 +22,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     if (length > 1048576) return Response.json({ error: 'BODY_TOO_LARGE', message: 'Request exceeds 1 MB.' }, { status: 413 });
     const body = ['GET', 'HEAD'].includes(request.method) ? undefined : await request.arrayBuffer();
     if (body && body.byteLength > 1048576) return Response.json({ error: 'BODY_TOO_LARGE', message: 'Request exceeds 1 MB.' }, { status: 413 });
-    const upstream = await fetch(destination, { method: request.method, headers, body, cache: 'no-store', redirect: 'manual', signal: AbortSignal.timeout(55000) });
+    const upstream = await fetch(destination, { method: request.method, headers, body, cache: 'no-store', redirect: 'manual', signal: AbortSignal.timeout(170000) });
     const outgoing = new Headers();
     for (const name of ['content-type', 'content-disposition', 'retry-after']) {
       const value = upstream.headers.get(name);

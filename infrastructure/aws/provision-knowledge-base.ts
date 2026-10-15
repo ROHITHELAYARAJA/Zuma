@@ -60,7 +60,7 @@ export async function connectManagedS3Evidence() {
       clientToken: randomUUID(),
       dataSourceConfiguration: { type: "MANAGED_KNOWLEDGE_BASE_CONNECTOR", managedKnowledgeBaseConnectorConfiguration: {
         connectorParameters: { type: "S3", version: "1", connectionConfiguration: { bucketName, bucketOwnerAccountId: accountId },
-          filterConfiguration: { inclusionPrefixes: ["evidence/"], inclusionPatterns: [".*\\.html$"], exclusionPrefixes: ["raw/", "fhir/"], maxFileSizeInMegaBytes: "1" } },
+          filterConfiguration: { inclusionPrefixes: ["evidence/"], exclusionPrefixes: ["raw/", "fhir/"], maxFileSizeInMegaBytes: "1" } },
       } },
     }), { abortSignal: AbortSignal.timeout(30000) });
     return { dataSourceId: result.dataSource?.dataSourceId, status: result.dataSource?.status, next: "Set BEDROCK_DATA_SOURCE_ID; check source-status until AVAILABLE, then upload normalized evidence and start ingestion." };

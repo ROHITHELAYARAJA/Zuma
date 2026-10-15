@@ -1,0 +1,44 @@
+{
+  "features": [
+    {
+      "name": "FHIR integration",
+      "implementation": "Original upstream FHIR preserved; contradictory terminology flagged",
+      "limit": "No official HL7 or ABDM conformance claim"
+    },
+    {
+      "name": "Correct patient",
+      "implementation": "Report and patient IDs verified; different repository patients stay separate"
+    },
+    {
+      "name": "Consent and roles",
+      "implementation": "Verified Hospital B clinician; report-scoped simulated consent, expiry, revocation and post-AI permission recheck"
+    },
+    {
+      "name": "Source-linked summary",
+      "implementation": "Bedrock selects canonical fact IDs; server renders only exact source statements"
+    },
+    {
+      "name": "Changes and conflicts",
+      "implementation": "Conflicting source code labels and partial birth dates flagged; no invented cross-patient trends"
+    },
+    {
+      "name": "Text and voice",
+      "implementation": "boto3 retrieval plus Nova 2 Lite text selection; Nova 2 Sonic transcription plus shared RAG plus Polly exact-text speech",
+      "verification": "Live text, live audio workflow and source citation checks passed"
+    },
+    {
+      "name": "Review and share",
+      "implementation": "Clinician edits, approves current source version and exports readable HTML or original-FHIR package",
+      "limit": "Recipient is the same authorized Hospital B treatment workflow; official FHIR profile validation still required"
+    }
+  ],
+  "cloud": {
+    "knowledgeBase": "LZASC0PVMX",
+    "dataSource": "OYF0748ZJG",
+    "ingestionJob": "E7KIRJI331",
+    "indexedDocuments": 2,
+    "indexedMetadataFiles": 2,
+    "failedDocuments": 0
+  },
+  "deployment": "Python service not deployed to Render by this run"
+}

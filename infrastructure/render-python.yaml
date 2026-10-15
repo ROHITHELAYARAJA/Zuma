@@ -1,0 +1,30 @@
+services:
+  - type: pserv
+    name: zuma-aws-evidence
+    runtime: python
+    plan: starter
+    buildCommand: pip install .
+    startCommand: uvicorn zuma_aws.service:app --host 0.0.0.0 --port 8795
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.12"
+      - key: AWS_REGION
+        value: us-east-1
+      - key: AWS_CLOUD_ENABLED
+        value: "true"
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: RAG_SERVICE_API_KEY
+        sync: false
+      - key: BEDROCK_KNOWLEDGE_BASE_ID
+        value: LZASC0PVMX
+      - key: BEDROCK_TEXT_MODEL_ID
+        value: us.amazon.nova-2-lite-v1:0
+      - key: BEDROCK_VOICE_MODEL_ID
+        value: amazon.nova-2-sonic-v1:0
+      - key: VOICE_OUTPUT_PROVIDER
+        value: polly
+      - key: POLLY_VOICE_ID
+        value: Joanna

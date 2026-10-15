@@ -66,6 +66,23 @@
         "kms:DescribeKey"
       ],
       "Resource": "arn:aws:kms:us-east-1:050922968627:key/9d376e4b-2e89-45ea-be2c-ccf55709d8cf"
+    },
+    {
+      "Sid": "NovaSpeech",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithBidirectionalStream"
+      ],
+      "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-2-sonic-v1:0"
+    },
+    {
+      "Sid": "VerifiedTextSpeech",
+      "Effect": "Allow",
+      "Action": [
+        "polly:SynthesizeSpeech"
+      ],
+      "Resource": "*"
     }
   ]
 }
