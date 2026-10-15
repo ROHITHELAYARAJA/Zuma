@@ -17,13 +17,13 @@
     "evidencePrefix": "evidence/",
     "setupEnvironment": "deployment/aws-setup.env.example",
     "runtimeEnvironment": "deployment/render-aws.env.example",
-    "status": "created-two-documents-indexed",
+    "status": "38 separate clinical evidence and limitation documents indexed",
     "knowledgeBaseId": "LZASC0PVMX",
     "dataSourceId": "OYF0748ZJG",
-    "lastIngestionJob": "BKXBJ3HBB5",
+    "lastIngestionJob": "AS9DMSNGAH",
     "voiceOutput": "Amazon Polly; native Nova output is optional strict mode",
     "search": "Bedrock MANAGED knowledge base; no separate OpenSearch collection",
-    "evidenceFormat": "readable-v2"
+    "evidenceFormat": "readable-v3, one clinical entry per indexed document"
   },
   "hosting": {
     "vercel": {
@@ -57,6 +57,7 @@
     "clinicalWorkspaceAdapter": "implemented-at-/abdm",
     "warning": "Repository terminology requires clinician review. The original /workspace remains a separate generated-data demo.",
     "answerContext": "Only AWS retrieved passages are sent to GLM; bundled manifest supplies scope and source identifiers",
-    "dataType": "Public NHA repository samples; not live hospital records"
+    "dataType": "Public NHA repository samples; not live hospital records",
+    "answerFormat": "English sections with numbered citations and quote support verification"
   }
 }

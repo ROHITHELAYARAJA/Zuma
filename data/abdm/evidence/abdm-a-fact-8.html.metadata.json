@@ -1,0 +1,46 @@
+{
+  "metadataAttributes": {
+    "patient_id": {
+      "value": {
+        "type": "STRING",
+        "stringValue": "fe371702-6d5e-482b-8231-79182f8712dc"
+      },
+      "includeForEmbedding": true
+    },
+    "hospital_id": {
+      "value": {
+        "type": "STRING",
+        "stringValue": "A"
+      },
+      "includeForEmbedding": true
+    },
+    "record_id": {
+      "value": {
+        "type": "STRING",
+        "stringValue": "abdm-a"
+      },
+      "includeForEmbedding": true
+    },
+    "dataset": {
+      "value": {
+        "type": "STRING",
+        "stringValue": "nha-abdm-repository"
+      },
+      "includeForEmbedding": true
+    },
+    "source_sha256": {
+      "value": {
+        "type": "STRING",
+        "stringValue": "f7766df5552c46e8583f3405887a45d3b92a220b5674c0ff434433a33868410a"
+      },
+      "includeForEmbedding": false
+    },
+    "evidence_format": {
+      "value": {
+        "type": "STRING",
+        "stringValue": "readable-v3"
+      },
+      "includeForEmbedding": false
+    }
+  }
+}
