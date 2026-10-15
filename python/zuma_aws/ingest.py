@@ -29,17 +29,19 @@ def main():
         statements.append("This is a public NHA GitHub repository sample report, not a live hospital patient record. Hospital A and Hospital B assignments are local test roles. The two repository reports refer to different patients and must not be merged. Only retrieved report evidence is available; this is not a complete medical history.")
         if len(str(report.get("birthDate", ""))) < 10:
             statements.append("Only the birth year is documented; the day and month are not provided.")
-        document = '<!doctype html><html lang="en"><meta charset="utf-8"><title>Repository sample ' + html.escape(report["name"]) + '</title><body><h1>' + html.escape(report["name"]) + '</h1>' + ''.join('<p>' + html.escape(x) + '</p>' for x in statements) + '</body></html>'
-        path = root / "data/abdm/evidence" / (report["reportId"] + ".html")
-        path.write_text(document, encoding="utf-8")
-        meta = Path(str(path) + ".metadata.json")
-        data = json.loads(meta.read_text())
-        data["metadataAttributes"]["evidence_format"] = {"value": {"type": "STRING", "stringValue": "readable-v2"}, "includeForEmbedding": False}
-        meta.write_text(json.dumps(data, indent=2) + "\n")
-        for file in (path, meta):
-            s3.put_object(Bucket=bucket, Key="evidence/" + file.name, Body=file.read_bytes(), ContentType="text/html" if file.suffix == ".html" else "application/json", ServerSideEncryption="aws:kms", SSEKMSKeyId=os.environ["S3_KMS_KEY_ID"])
-        print(report["reportId"], "uploaded", len(facts), "readable facts from encrypted S3 raw source")
-    job = session.client("bedrock-agent").start_ingestion_job(knowledgeBaseId=os.environ["BEDROCK_KNOWLEDGE_BASE_ID"], dataSourceId=os.environ["BEDROCK_DATA_SOURCE_ID"], description="Readable evidence v2 for source-linked English summaries")["ingestionJob"]
+        metadata = json.loads((root / "data/abdm/evidence" / (report["reportId"] + ".html.metadata.json")).read_text())
+        metadata["metadataAttributes"]["evidence_format"] = {"value": {"type": "STRING", "stringValue": "readable-v3"}, "includeForEmbedding": False}
+        for index, statement in enumerate(statements):
+            title = report["name"] + " | " + (facts[index]["title"] if index < len(facts) else "Source limitations")
+            document = '<!doctype html><html lang="en"><meta charset="utf-8"><title>' + html.escape(title) + '</title><body><h1>' + html.escape(title) + '</h1><p>' + html.escape(statement) + '</p></body></html>'
+            path = root / "data/abdm/evidence" / (report["reportId"] + "-fact-" + str(index + 1) + ".html")
+            path.write_text(document, encoding="utf-8")
+            meta = Path(str(path) + ".metadata.json")
+            meta.write_text(json.dumps(metadata, indent=2) + "\n")
+            for file in (path, meta):
+                s3.put_object(Bucket=bucket, Key="evidence/" + file.name, Body=file.read_bytes(), ContentType="text/html" if file.suffix == ".html" else "application/json", ServerSideEncryption="aws:kms", SSEKMSKeyId=os.environ["S3_KMS_KEY_ID"])
+        print(report["reportId"], "uploaded", len(statements), "separate evidence documents from encrypted S3 raw source")
+    job = session.client("bedrock-agent").start_ingestion_job(knowledgeBaseId=os.environ["BEDROCK_KNOWLEDGE_BASE_ID"], dataSourceId=os.environ["BEDROCK_DATA_SOURCE_ID"], description="Isolated readable evidence v3 for source-linked English summaries")["ingestionJob"]
     print("INGESTION", job["ingestionJobId"], job["status"])
 
 if __name__ == "__main__":

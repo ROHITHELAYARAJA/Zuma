@@ -8,7 +8,7 @@ const bucket=process.env.S3_REPORT_BUCKET;if(!bucket)throw new Error('S3_REPORT_
 const key=process.env.S3_KMS_KEY_ID;if(!key)throw new Error('S3_KMS_KEY_ID_REQUIRED');
 for(const file of readdirSync('data/abdm/evidence').filter(file=>file.endsWith('.metadata.json'))){
   const metadata=JSON.parse(readFileSync(`data/abdm/evidence/${file}`,'utf8'));
-  if(metadata.metadataAttributes?.evidence_format?.value?.stringValue!=='readable-v2')throw new Error('Rebuild readable evidence with python -m zuma_aws.ingest before uploading.');
+  if(!['readable-v2','readable-v3'].includes(metadata.metadataAttributes?.evidence_format?.value?.stringValue))throw new Error('Rebuild readable evidence with python -m zuma_aws.ingest before uploading.');
 }
 const client=new S3Client(requireAwsConfiguration());
 try{
