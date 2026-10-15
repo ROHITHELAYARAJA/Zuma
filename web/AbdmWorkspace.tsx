@@ -1,82 +1,93 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { ArrowUp, Check, ChevronDown, FileJson, Mic, Search, ShieldCheck, Square } from "lucide-react";
 import AuthForm, { type AuthConfiguration } from "../src/AuthForm";
-import { api, ApiError, post } from "../src/lib/api";
+import { api, apiBase, ApiError, post } from "../src/lib/api";
+import AIThinkingBlock from "@/components/ui/ai-thinking-block";
+import SiriWave from "@/components/ui/siri-wave";
+import StreamingAnswer from "@/components/ui/streaming-answer";
 import "./abdm.css";
-
 type Report = { reportId: string; name: string; patientId: string; hospitalId: string; birthDate: string; source: string };
-type View = { reportId: string; patientId: string; name: string; birthDate: string; hospitalId: string; sourceUrl: string; sha256: string; sourceVersion: string; allowed: boolean; consent: { active: boolean; expiresAt: string }; approval: { text: string; doctor: string } | null; bundle: { entry: { resource: { resourceType: string; id?: string } }[] } | null; findings: { title: string; detail: string }[]; audit: { id: string; action: string; actor: string; at: string }[]; notice: string };
-type Answer = { answer: string; citations: { id: string; title: string; quote: string; sourceUrl: string }[]; warning: string; audioBase64?: string; audioContentType?: string; transcript?: string; pipeline?: { retrieval: string; model: string; retrievedPassages: number; answerContext: string; dataType: string } };
-export default function AbdmWorkspace() {
-  const [config, setConfig] = useState<AuthConfiguration | null>(null);
-  const [login, setLogin] = useState(false);
-  const [reports, setReports] = useState<Report[]>([]);
-  const [view, setView] = useState<View | null>(null);
-  const [question, setQuestion] = useState("");
-  const [patientSearch, setPatientSearch] = useState("");
-  const [answer, setAnswer] = useState<Answer | null>(null);
-  const [draft, setDraft] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [recording, setRecording] = useState(false);
-  const recorder = useRef<{ stop: () => void } | null>(null);
-  const epoch = useRef(0);
-  const initialized = useRef(false);
-  async function select(id: string) {
-    epoch.current++; setAnswer(null); setDraft(""); setError(""); setView(null);
-    setView(await api<View>(`/abdm/reports/${id}/workspace`));
-  }
-  async function initialize() {
-    setBusy(true); setError("");
-    try {
-      const c = await api<AuthConfiguration>("/auth/config"); setConfig(c);
-      if (c.provider === "demo") await post("/demo/session");
-      const data = await api<{ reports: Report[] }>("/abdm/dataset"); setReports(data.reports); setLogin(false);
-      if (data.reports[0]) await select(data.reports[0].reportId);
-    } catch (e) { if (e instanceof ApiError && [401, 403].includes(e.status)) setLogin(true); else setError((e as Error).message); }
-    finally { setBusy(false); }
-  }
-  useEffect(() => { if (!initialized.current) { initialized.current = true; void initialize(); } return () => { recorder.current?.stop(); }; }, []);
-  async function consent(action: string) {
-    if (!view) return; epoch.current++; setAnswer(null); setDraft(""); setBusy(true); setError("");
-    try { setView(await post<View>(`/abdm/reports/${view.reportId}/consent/${action}`)); }
-    catch(e) { setError((e as Error).message); } finally { setBusy(false); }
-  }
-  async function ask(payload: object, voice = false) {
-    if (!view) return; const current = epoch.current; setBusy(true); setError("");
-    try {
-      const result = await post<Answer>(`/abdm/reports/${view.reportId}/${voice ? "voice" : "chat"}`, payload);
-      if (epoch.current !== current) return;
-      setAnswer(result); setDraft(result.answer);
-      if (result.transcript) setQuestion(result.transcript);
-      if (result.audioBase64) await new Audio(`data:${result.audioContentType};base64,${result.audioBase64}`).play();
-    } catch (e) { if (epoch.current === current) setError((e as Error).message); } finally { setBusy(false); }
-  }
-  async function record() {
-    if (recording) { recorder.current?.stop(); return; }
-    try {
-      const media = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 }, video: false });
-      const context = new AudioContext(); const source = context.createMediaStreamSource(media); const processor = context.createScriptProcessor(4096, 1, 1); const mute = context.createGain(); mute.gain.value = 0;
-      const chunks: Float32Array[] = []; source.connect(processor); processor.connect(mute); mute.connect(context.destination);
-      processor.onaudioprocess = event => chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
-      let stopped = false;
-      const stop = () => {
-        if (stopped) return; stopped = true; clearTimeout(timer); processor.disconnect(); source.disconnect(); mute.disconnect(); media.getTracks().forEach(t => t.stop()); setRecording(false);
-        const length = chunks.reduce((n,c) => n+c.length,0); const input = new Float32Array(length); let at = 0; for (const c of chunks) { input.set(c,at); at+=c.length; }
-        const ratio = context.sampleRate / 16000; const pcm = new Int16Array(Math.floor(length/ratio));
-        for(let i=0;i<pcm.length;i++) { const value = Math.max(-1,Math.min(1,input[Math.floor(i*ratio)])); pcm[i]=Math.round(value*(value<0?32768:32767)); }
-        void context.close(); const bytes = new Uint8Array(pcm.buffer); let binary=""; for(let i=0;i<bytes.length;i+=8192) binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
-        if (pcm.length) void ask({ audioBase64:btoa(binary),sampleRate:16000 },true);
-      };
-      const timer = setTimeout(stop,20000); recorder.current={stop}; setRecording(true);
-    } catch(e) { setError((e as Error).message); }
-  }
-  async function approve() {
-    if(!view)return; setBusy(true); setError("");
-    try { setView(await post<View>(`/abdm/reports/${view.reportId}/approve`,{text:draft,sourceVersion:view.sourceVersion})); }
-    catch(e) {setError((e as Error).message);} finally {setBusy(false);}
-  }
-  if (login && config) return <AuthForm configuration={config} initialError={error} onSignedIn={initialize} onRetry={() => void initialize()}/>;
-  return <main className="abdm-app"><nav><Link href="/">Zuma / Clinical workspace</Link><Link href="/setup">Setup ↗</Link><a href="/deployment/abdm/render-guide.html">Deployment guide ↗</a></nav><header><span className="abdm-label">NHA REPOSITORY · EVIDENCE REVIEW</span><h1>Source first.<br/>Doctor approved.</h1><p>Public NHA GitHub sample reports, not live hospital patient data. Two distinct patients; their records are never merged.</p></header>{error&&<div className="abdm-error" role="alert">{error}<button onClick={()=>void initialize()}>Reconnect</button></div>}<label className="abdm-search">Find repository patient<input aria-label="Find repository patient" placeholder="Patient name or source patient ID" value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} /></label><div className="abdm-selector">{reports.filter(r=>!patientSearch.trim()||[r.name,r.patientId,r.reportId].some(v=>v.toLowerCase().includes(patientSearch.trim().toLowerCase()))).map(r=><button className={view?.reportId===r.reportId?"selected":""} key={r.reportId} disabled={busy||recording} onClick={()=>void select(r.reportId).catch(e=>setError(e.message))}>Hospital {r.hospitalId} <strong>{r.name}</strong><small>Birth date: {r.birthDate}</small></button>)}</div>{busy&&!view&&<p>Connecting to the clinical service…</p>}{view&&<><section className="abdm-permission"><div><strong>{view.allowed?"Report access permitted":"Report access requires permission"}</strong><p>Recipient: your Hospital B doctor · Purpose: treatment · Scope: this report only. Grant is simulated for this demonstration.</p>{view.allowed&&<small>Expires: {new Date(view.consent.expiresAt).toLocaleString()}</small>}</div><button disabled={busy||recording} onClick={()=>void consent(view.allowed?"revoke":"grant")}>{view.allowed?"Revoke access":"Grant demo permission"}</button></section><div className="abdm-grid"><section><h2>Patient & source</h2><p><strong>{view.name}</strong><br/>Patient ID: {view.patientId}<br/>Birth date as recorded: {view.birthDate}</p><a href={view.sourceUrl} target="_blank" rel="noreferrer">Inspect pinned GitHub source ↗</a>{view.findings.map(f=><aside key={f.title}><strong>{f.title}</strong><p>{f.detail}</p></aside>)}{view.bundle&&<details><summary>{view.bundle.entry.length} original FHIR resources</summary><pre>{JSON.stringify(view.bundle,null,2)}</pre></details>}</section><section><h2>Ask the evidence</h2><p>Live AWS knowledge retrieval → GLM English draft → supporting-quote check → doctor review. No clinical prediction or treatment recommendation.</p><textarea aria-label="Question" value={question} onChange={e=>setQuestion(e.target.value)} placeholder="What allergy information is documented?" disabled={!view.allowed||busy}/><div className="abdm-actions"><button disabled={!view.allowed||busy||recording} onClick={()=>{const prompt="Explain this medical report in simple English. Summarize documented conditions, allergies, medicines, tests and findings, and issues needing doctor review. Preserve uncertainty and dates.";setQuestion(prompt);void ask({question:prompt});}}>Explain report in English</button><button disabled={!view.allowed||busy||!question.trim()||recording} onClick={()=>void ask({question})}>{busy?"Retrieving…":"Ask by text"}</button><button disabled={!view.allowed||busy} onClick={()=>void record()}>{recording?"Stop and send":"Ask Nova by voice"}</button></div><small>Voice: microphone permission; up to 20 seconds. Nova transcribes; Polly reads the evidence-backed text.</small>{answer&&<>{answer.pipeline&&<p className="abdm-pipeline"><strong>Live AWS retrieval</strong><br/>{answer.pipeline.retrievedPassages} retrieved passages · Model: {answer.pipeline.model}<br/>{answer.pipeline.answerContext}<br/>{answer.pipeline.dataType}</p>}<div className="abdm-answer">{answer.answer}</div><p>{answer.warning}</p>{answer.citations.map(c=><details key={c.id}><summary>{c.title} · source evidence</summary><p>{c.quote}</p><a href={c.sourceUrl} target="_blank" rel="noreferrer">Original report ↗</a></details>)}</>}</section><section><h2>Review & release</h2><p>Edit the draft, inspect its sources, then approve it for the current permission and source version.</p><textarea aria-label="Review draft" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Your evidence-backed draft appears here." disabled={!view.allowed||busy}/><button disabled={!view.allowed||busy||!draft.trim()||recording} onClick={()=>void approve()}>Approve draft</button>{view.approval&&<div className="abdm-actions"><a href={`/api/abdm/reports/${view.reportId}/export?format=html`}>Download readable report</a><a href={`/api/abdm/reports/${view.reportId}/export?format=fhir`}>Download FHIR package</a></div>}<p>Original FHIR is preserved. Terminology and official HL7/ABDM profile validation remain review requirements.</p><h3>Audit trail</h3>{view.audit.slice(0,8).map(a=><p key={a.id}><strong>{a.action.replaceAll("_"," ")}</strong><br/><small>{a.actor} · {new Date(a.at).toLocaleString()}</small></p>)}</section></div><footer>{view.notice}</footer></>}</main>;
+type View = { reportId: string; patientId: string; name: string; birthDate: string; hospitalId: string; sourceUrl: string; sha256: string; sourceVersion: string; allowed: boolean; consent: { active: boolean; expiresAt: string }; approval: { text: string; doctor: string } | null; bundle: { entry: { resource: { resourceType: string; id?: string } }[] } | null; findings: { title: string; detail: string }[]; audit: { id: string; action: string; actor: string; at: string }[]; notice: string; keyResults: { id: string; label: string; value: number; unit: string; date: string | null }[]; clinicalSource: string; clinicalDate: string; retrievedAt: string };
+type Answer = { answer: string; citations: { id: string; title: string; quote: string; sourceUrl: string }[]; warning: string; concise?: boolean; condensed?: boolean; audioBase64?: string; audioContentType?: string; transcript?: string; pipeline?: { retrieval: string; model: string; retrievedPassages: number; answerContext: string; dataType: string } };
+type Message={id:string;question:string;text:string;complete:boolean;answer?:Answer};
+const briefPrompt="Give the doctor a brief clinical handoff, under 180 words: documented conditions, allergies, recorded medicines, key results with units and dates, and unresolved issues. Do not repeat facts or give treatment recommendations.";
+function friendly(error:unknown){const text=error instanceof Error?error.message:String(error);return ({SUMMARY_TOO_LONG:"Please ask a more specific question. The full source record remains available.",SUMMARY_REQUIRES_EVIDENCE_REVIEW:"The answer could not be fully supported by the retrieved evidence. Try a specific question or inspect the source record.",NO_VERIFIED_KNOWLEDGE_BASE_EVIDENCE:"No permitted evidence was retrieved for this question. Try asking about a specific recorded finding.",AbortError:"Request stopped."} as Record<string,string>)[text]??text;}
+export default function AbdmWorkspace(){
+ const [config,setConfig]=useState<AuthConfiguration|null>(null),[login,setLogin]=useState(false);
+ const [reports,setReports]=useState<Report[]>([]),[view,setView]=useState<View|null>(null);
+ const [question,setQuestion]=useState(""),[patientSearch,setPatientSearch]=useState(""),[messages,setMessages]=useState<Message[]>([]);
+ const [draft,setDraft]=useState(""),[busy,setBusy]=useState(false),[asking,setAsking]=useState(false),[voiceRequest,setVoiceRequest]=useState(false),[error,setError]=useState("");
+ const [recording,setRecording]=useState(false),[speaking,setSpeaking]=useState(false),[level,setLevel]=useState(0),[reviewOpen,setReviewOpen]=useState(false),[sourceOpen,setSourceOpen]=useState(false);
+ const recorder=useRef<{stop:(send?:boolean)=>void}|null>(null),epoch=useRef(0),initialized=useRef(false),request=useRef<AbortController|null>(null),audio=useRef<HTMLAudioElement|null>(null);
+ function stopAudio(){audio.current?.pause();audio.current=null;setSpeaking(false);}
+ function resetConversation(){epoch.current++;request.current?.abort();recorder.current?.stop(false);stopAudio();setMessages([]);setDraft("");setQuestion("");setError("");setReviewOpen(false);setSourceOpen(false);}
+ async function select(id:string){resetConversation();setView(null);setBusy(true);try{setView(await api<View>(`/abdm/reports/${id}/workspace`));}catch(e){setError(friendly(e));}finally{setBusy(false);}}
+ async function initialize(){setBusy(true);setError("");try{const c=await api<AuthConfiguration>("/auth/config");setConfig(c);if(c.provider==="demo")await post("/demo/session");const data=await api<{reports:Report[]}>("/abdm/dataset");setReports(data.reports);setLogin(false);if(data.reports[0])await select(data.reports[0].reportId);}catch(e){if(e instanceof ApiError&&[401,403].includes(e.status))setLogin(true);else setError(friendly(e));}finally{setBusy(false);}}
+ useEffect(()=>{if(!initialized.current){initialized.current=true;void initialize();}return()=>{epoch.current++;request.current?.abort();recorder.current?.stop(false);audio.current?.pause();};},[]);
+ async function consent(action:string){if(!view)return;const id=view.reportId;resetConversation();setBusy(true);try{setView(await post<View>(`/abdm/reports/${id}/consent/${action}`));}catch(e){setError(friendly(e));}finally{setBusy(false);}}
+ async function ask(payload:{question?:string;audioBase64?:string;sampleRate?:number},voice=false){
+  if(!view||asking)return;const current=epoch.current,id=crypto.randomUUID(),controller=new AbortController();request.current=controller;stopAudio();setAsking(true);setVoiceRequest(voice);setError("");setDraft("");setQuestion("");
+  setMessages(rows=>[...rows.slice(-9),{id,question:payload.question??"Voice question",text:"",complete:false}]);
+  const update=(text:string,complete=false,result?:Answer)=>setMessages(rows=>rows.map(m=>m.id===id?{...m,text,complete,answer:result??m.answer,question:result?.transcript??m.question}:m));
+  try{
+   let result:Answer|undefined;
+   if(voice){result=await api<Answer>(`/abdm/reports/${view.reportId}/voice`,{method:"POST",body:JSON.stringify(payload),signal:controller.signal});}
+   else{
+    const history=messages.filter(m=>m.complete).slice(-3).flatMap(m=>[{role:"user",content:m.question.slice(0,4000)},{role:"assistant",content:m.text.slice(0,4000)}]);
+    const response=await fetch(`${apiBase}/api/abdm/reports/${view.reportId}/chat/stream`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json","Accept":"text/event-stream"},body:JSON.stringify({...payload,history}),signal:controller.signal});
+    if(!response.ok){const failure=await response.json().catch(()=>({}));throw new Error(failure.message??"The clinical service could not answer this request.");}
+    if(!response.body)throw new Error("The answer stream is unavailable.");
+    const reader=response.body.getReader(),decoder=new TextDecoder();let buffer="",text="";
+    while(true){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let split:number;
+     while((split=buffer.indexOf("\n\n"))!==-1){const frame=buffer.slice(0,split);buffer=buffer.slice(split+2);const event=frame.split("\n").find(l=>l.startsWith("event:"))?.slice(6).trim();const data=frame.split("\n").filter(l=>l.startsWith("data:")).map(l=>l.slice(5).trim()).join("\n");if(!data)continue;const eventData=JSON.parse(data);
+      if(epoch.current!==current){await reader.cancel();return;}
+      if(event==="answer.delta"){text+=eventData.text;update(text);}
+      if(event==="answer.complete")result=eventData as Answer;
+      if(event==="answer.error"){await reader.cancel();setMessages([]);throw new Error(eventData.message);}
+     }
+    }
+   }
+   if(epoch.current!==current||controller.signal.aborted)return;
+   if(!result)throw new Error("The response ended before the evidence check completed. Please try again.");
+   update(result.answer,true,result);setDraft(result.answer);
+   if(result.audioBase64){const player=new Audio(`data:${result.audioContentType};base64,${result.audioBase64}`);audio.current=player;player.onended=()=>setSpeaking(false);player.onerror=()=>setSpeaking(false);setSpeaking(true);await player.play().catch(()=>{setSpeaking(false);setError("Your answer is ready. The browser blocked automatic audio playback.");});}
+  }catch(e){if(epoch.current===current){setMessages(rows=>rows.filter(m=>m.id!==id));if(!controller.signal.aborted){setError(friendly(e));setQuestion(q=>q||payload.question||"");}}}
+  finally{if(epoch.current===current){setAsking(false);setVoiceRequest(false);}}
+ }
+ async function record(){
+  if(recording){recorder.current?.stop();return;}if(!view?.allowed)return;stopAudio();const current=epoch.current;
+  try{
+   const media=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1},video:false});if(epoch.current!==current){media.getTracks().forEach(t=>t.stop());return;}
+   const context=new AudioContext(),source=context.createMediaStreamSource(media),processor=context.createScriptProcessor(4096,1,1),mute=context.createGain();mute.gain.value=0;
+   const chunks:Float32Array[]=[];source.connect(processor);processor.connect(mute);mute.connect(context.destination);
+   processor.onaudioprocess=event=>{const chunk=new Float32Array(event.inputBuffer.getChannelData(0));chunks.push(chunk);setLevel(Math.min(1,Math.sqrt(chunk.reduce((n,v)=>n+v*v,0)/chunk.length)*7));};
+   let stopped=false;const stop=(send=true)=>{if(stopped)return;stopped=true;clearTimeout(timer);processor.disconnect();source.disconnect();mute.disconnect();media.getTracks().forEach(t=>t.stop());setRecording(false);setLevel(0);
+    const length=chunks.reduce((n,c)=>n+c.length,0),input=new Float32Array(length);let at=0;for(const c of chunks){input.set(c,at);at+=c.length;}
+    const ratio=context.sampleRate/16000,pcm=new Int16Array(Math.floor(length/ratio));for(let i=0;i<pcm.length;i++){const value=Math.max(-1,Math.min(1,input[Math.floor(i*ratio)]));pcm[i]=Math.round(value*(value<0?32768:32767));}void context.close();
+    if(!send||epoch.current!==current||!pcm.length)return;const bytes=new Uint8Array(pcm.buffer);let binary="";for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));void ask({audioBase64:btoa(binary),sampleRate:16000},true);
+   };const timer=setTimeout(()=>stop(),20000);recorder.current={stop};setRecording(true);
+  }catch(e){setError(friendly(e));}
+ }
+ async function approve(){if(!view)return;setBusy(true);setError("");try{setView(await post<View>(`/abdm/reports/${view.reportId}/approve`,{text:draft,sourceVersion:view.sourceVersion}));}catch(e){setError(friendly(e));}finally{setBusy(false);}}
+ if(login&&config)return <AuthForm configuration={config} initialError={error} onSignedIn={initialize} onRetry={()=>void initialize()}/>;
+ return <main className="abdm-app"><nav><Link href="/" className="zuma-wordmark"><span>+</span> Zuma <small>Clinical workspace</small></Link><Link href="/setup">Connections ↗</Link></nav>
+ <header><span className="abdm-label">PATIENT REVIEW · SOURCE-LINKED ANSWERS</span><h1>Less searching.<br/>More clarity.</h1><p>A concise brief for the treating doctor. Ask a follow-up by text or voice.</p><span className="zuma-sample">Public NHA repository samples · no live hospital records connected</span></header>
+ {error&&<div className="abdm-error" role="alert">{error}<button onClick={()=>setError("")}>Dismiss</button></div>}
+ <div className="zuma-directory"><label className="abdm-search"><Search size={17}/><input aria-label="Find repository patient" placeholder="Find a patient by name or source ID" value={patientSearch} onChange={e=>setPatientSearch(e.target.value)}/></label><div className="abdm-selector">{reports.filter(r=>!patientSearch.trim()||[r.name,r.patientId].some(v=>v.toLowerCase().includes(patientSearch.trim().toLowerCase()))).map(r=><button className={view?.reportId===r.reportId?"selected":""} key={r.reportId} disabled={busy||asking||recording} onClick={()=>void select(r.reportId)}><span>Hospital {r.hospitalId}</span><strong>{r.name}</strong><small>Birth date: {r.birthDate}</small></button>)}</div></div>
+ {busy&&!view&&<p role="status">Opening the patient record…</p>}
+ {view&&<><section className="abdm-permission"><ShieldCheck size={22}/><div><strong>{view.allowed?"Report access permitted":"Permission required"}</strong><p>Hospital B doctor · treatment · this report only · demo consent</p></div><button disabled={busy||asking||recording} onClick={()=>void consent(view.allowed?"revoke":"grant")}>{view.allowed?"Revoke access":"Grant demo permission"}</button></section>
+ <div className="abdm-grid"><aside className="zuma-patient-panel"><span className="abdm-label">PATIENT SNAPSHOT</span><h2>{view.name}</h2><p>Birth date as recorded: <strong>{view.birthDate}</strong></p><p className="zuma-source-meta">{view.clinicalSource}<br/>Clinical date: {view.clinicalDate?new Date(view.clinicalDate).toLocaleDateString("en-GB"):"Not documented"}<br/>Retrieved: {view.retrievedAt?new Date(view.retrievedAt).toLocaleTimeString("en-GB"):"Current request"}</p>
+ {view.findings.some(f=>f.title==="Conflicting terminology in source")&&<div className="zuma-attention"><strong>Source wording needs review</strong><p>A terminology code has conflicting labels. The answer preserves the original wording.</p></div>}
+ <details><summary>Identity & source details <ChevronDown size={14}/></summary><p>Source patient ID: {view.patientId}</p><a href={view.sourceUrl} target="_blank" rel="noreferrer">Inspect original NHA report ↗</a>{view.findings.map(f=><div className="zuma-source-note" key={f.title}><strong>{f.title}</strong><p>{f.detail}</p></div>)}</details>
+ {view.allowed&&<details open={sourceOpen} onToggle={e=>setSourceOpen(e.currentTarget.open)}><summary><FileJson size={16}/> Original FHIR record</summary>{sourceOpen&&view.bundle&&<><p>{view.bundle.entry.length} source resources. Structural and terminology limitations remain visible; external FHIR profile validation is pending.</p><pre>{JSON.stringify(view.bundle,null,2)}</pre></>}</details>}
+ {view.keyResults?.length>0&&<div className="zuma-results"><h3>Recorded results</h3><p>Historical source values, not a current assessment.</p><table><tbody>{view.keyResults.map(r=><tr key={r.id}><td>{r.label}{r.date&&<small>{new Date(r.date).toLocaleDateString("en-GB")}</small>}</td><td><strong>{r.value}</strong> {r.unit}</td></tr>)}</tbody></table></div>}
+ <div className="zuma-voice"><SiriWave variant={recording?"wave":"fluid-dots"} size={180} active={recording||speaking||(asking&&voiceRequest)} level={recording?level:speaking?0.35:0}/><strong>{recording?"Listening…":speaking?"Reading your answer":asking&&voiceRequest?"Preparing a voice answer":"Ask naturally."}</strong><p>{recording?"Speak your question, then press stop.":"Nova understands your recording. Polly reads the checked answer."}</p><button disabled={!view.allowed||busy||asking} onClick={()=>void record()}>{recording?<Square size={15}/>:<Mic size={15}/>} {recording?"Stop and send":"Ask by voice"}</button>{speaking&&<button onClick={stopAudio}>Stop audio</button>}<small>Microphone permission · up to 20 seconds</small></div>
+ </aside><section className="zuma-chat"><div className="zuma-chat-heading"><div><span className="abdm-label">ZUMA ASSISTANT</span><h2>The record, explained.</h2></div><span className="zuma-proof"><Check size={14}/> Source linked</span></div>
+ <div className="zuma-conversation" aria-label="Patient conversation">{messages.length===0&&<div className="zuma-empty"><span>+</span><h3>What does the doctor need to know?</h3><p>Start with a brief, then ask about a specific finding. Answers stay in this workspace until you choose to export.</p><div className="zuma-suggestions">{[["Clinical brief",briefPrompt],["Documented allergies","What allergies are recorded? Keep it brief and preserve uncertainty."],["Recorded medicines","What medicines are recorded, with status and date? Do not infer current use."]].map(([title,prompt])=><button key={title} disabled={!view.allowed||busy||asking||recording} onClick={()=>void ask({question:prompt})}>{title} ↗</button>)}</div></div>}
+ {messages.map(m=><article className="zuma-turn" key={m.id}><div className="zuma-user-message">{m.question===briefPrompt?"Prepare a clinical brief for this patient.":m.question}</div><div className="zuma-assistant-message"><span className="zuma-assistant-label">ZUMA <small>{m.complete?"Evidence checked":m.text?"Showing checked answer":"Working on your request"}</small></span>{!m.text&&asking&&<AIThinkingBlock voice={voiceRequest}/>}<StreamingAnswer text={m.text} streaming={!m.complete&&Boolean(m.text)}/>{m.complete&&m.answer&&<><details className="zuma-citations"><summary>{m.answer.citations.length} supporting sources <ChevronDown size={14}/></summary>{m.answer.citations.map(c=><div key={c.id}><strong>{c.title}</strong><p>{c.quote}</p><a href={c.sourceUrl} target="_blank" rel="noreferrer">Open source report ↗</a></div>)}</details><p className="zuma-answer-note">{m.answer.condensed?"Some details were shortened or withheld during support checks. Inspect the source record for the full picture.":"Brief view of retrieved evidence · clinician review required · not a complete medical history."}</p><details className="zuma-pipeline"><summary>How this answer was prepared</summary><p>{m.answer.pipeline?.retrievedPassages} AWS-retrieved passages · {m.answer.pipeline?.model}<br/>{m.answer.pipeline?.answerContext}</p></details></>}</div></article>)}
+ </div><form className="zuma-composer" onSubmit={e=>{e.preventDefault();if(question.trim()&&!asking)void ask({question:question.trim()});}}><textarea aria-label="Question" value={question} onChange={e=>setQuestion(e.target.value)} placeholder={view.allowed?"Ask about this patient’s records…":"Grant report permission to ask a question"} disabled={!view.allowed||busy||recording} rows={2} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();if(question.trim()&&!asking)void ask({question:question.trim()});}}}/><div><small>Enter to send · Shift + Enter for a new line</small>{asking?<button type="button" onClick={()=>request.current?.abort()}><Square size={15}/> Stop response</button>:<button type="submit" disabled={!view.allowed||busy||recording||!question.trim()} aria-label="Send text question"><ArrowUp size={18}/><span>Ask Zuma</span></button>}</div></form>
+ </section></div><section className="zuma-review"><button className="zuma-review-toggle" disabled={!draft||asking} onClick={()=>setReviewOpen(!reviewOpen)}><span><ShieldCheck size={19}/> Review the draft on screen</span><ChevronDown size={18}/></button>{reviewOpen&&<div><p>The doctor reviews and approves the text here. Approval does not send it to another hospital or insurer.</p><textarea aria-label="Review draft" value={draft} onChange={e=>setDraft(e.target.value)} disabled={!view.allowed||asking||busy}/><button disabled={!view.allowed||busy||asking||!draft.trim()} onClick={()=>void approve()}>Approve reviewed draft</button>{view.approval&&<div className="abdm-actions"><a href={`/api/abdm/reports/${view.reportId}/export?format=html`}>Download readable report</a><a href={`/api/abdm/reports/${view.reportId}/export?format=fhir`}>Download source FHIR package</a></div>}</div>}</section><details className="zuma-audit"><summary>Access & review history</summary>{view.audit.slice(0,8).map(a=><p key={a.id}><strong>{a.action.replaceAll("_"," ")}</strong> · {a.actor} · {new Date(a.at).toLocaleString()}</p>)}</details><footer>Sample-data prototype. FHIR source content is preserved; official HL7/ABDM profile validation and real hospital exchange remain integration requirements.</footer></>}
+ </main>;
 }

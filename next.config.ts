@@ -7,6 +7,7 @@ if (!['http:', 'https:'].includes(target.protocol) || target.username || target.
 }
 
 const config: NextConfig = {
+  distDir: process.env.NEXT_BUILD_DIR ?? ".next",
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

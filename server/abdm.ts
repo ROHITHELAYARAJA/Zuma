@@ -1,4 +1,6 @@
 import { Hono, type Context } from "hono";
+import { streamSSE } from "hono/streaming";
+import { isDeepStrictEqual } from "node:util";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { z } from "zod";
@@ -18,17 +20,24 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
   const load = async (c: Context) => {
     const session = await hooks.getSession(c);
     if (session.identity.actor.role !== "doctor" || session.identity.actor.hospitalId !== "B") throw new ClinicalError(403, "ROLE_DENIED", "A verified Hospital B clinician is required.");
-    const report = dataset.reports.find(r => r.reportId === c.req.param("id"));
+    let report = dataset.reports.find(r => r.reportId === c.req.param("id"));
     if (!report) throw new ClinicalError(404, "REPORT_NOT_FOUND", "Repository report does not exist.");
     const raw = readFileSync(new URL(`../data/abdm/${report.file}`, import.meta.url));
     if (createHash("sha256").update(raw).digest("hex") !== report.sha256) throw new ClinicalError(409, "SOURCE_CHANGED", "Repository source changed; refresh the dataset before using it.");
+    if (authProvider() === "supabase") {
+      const { data: stored, error } = await supabaseAdmin().from("abdm_repository_reports").select("source_patient_id,patient_name,sha256,fhir_bundle").eq("report_id", report.reportId).single();
+      if (error || !stored) throw new ClinicalError(503, "FHIR_SOURCE_UNAVAILABLE", "The patient FHIR report could not be read from Supabase.");
+      if (stored.source_patient_id !== report.patientId || stored.sha256 !== report.sha256 || stored.patient_name !== report.name || !isDeepStrictEqual(stored.fhir_bundle, report.bundle)) throw new ClinicalError(409, "FHIR_SOURCE_CHANGED", "The database record differs from the pinned evidence version. Synchronize the source and knowledge base before continuing.");
+      report = { ...report, bundle: stored.fhir_bundle };
+    }
+    const retrievedAt = new Date().toISOString();
     const data = session.data as AbdmData;
     data.abdm ??= {};
     data.abdm[report.reportId] ??= { consent: { active: false, expiresAt: new Date(0).toISOString(), version: 0, doctorId: session.identity.actor.id, recipient: "B", purpose: "treatment" }, audit: [] };
     const state = data.abdm[report.reportId];
     const fingerprint = () => createHash("sha256").update(JSON.stringify({ hash: report.sha256, consent: state.consent, actor: session.identity.actor.id })).digest("hex").slice(0, 24);
     const allowed = state.consent.active && state.consent.doctorId === session.identity.actor.id && Date.parse(state.consent.expiresAt) > Date.now();
-    return { session, report, state, sourceVersion: fingerprint(), allowed };
+    return { session, report, state, sourceVersion: fingerprint(), allowed, retrievedAt };
   };
   const requireAccess = (scope: Awaited<ReturnType<typeof load>>) => { if (!scope.allowed) throw new ClinicalError(403, "CONSENT_REQUIRED", "Grant the report-specific demonstration permission before reading this report."); };
   const audit = (scope: Awaited<ReturnType<typeof load>>, action: string) => { scope.state.audit.unshift({ id: randomUUID(), action, at: new Date().toISOString(), actor: scope.session.identity.actor.name }); scope.state.audit = scope.state.audit.slice(0, 100); };
@@ -44,7 +53,13 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
     }
     return [...codes.entries()].filter(([, labels]) => labels.size > 1).map(([code, labels]) => ({ title: "Conflicting terminology in source", detail: code + " is used with different labels: " + [...labels].join(", ") + ". Human mapping review required; source preserved." }));
   };
-  const view = (scope: Awaited<ReturnType<typeof load>>) => ({ reportId: scope.report.reportId, patientId: scope.report.patientId, name: scope.report.name, birthDate: scope.report.birthDate, hospitalId: scope.report.hospitalId, clinicalDate: scope.report.clinicalDate, sourceUrl: scope.report.source, sha256: scope.report.sha256, sourceVersion: scope.sourceVersion, consent: scope.state.consent, allowed: scope.allowed, approval: scope.allowed && scope.state.approved?.sourceVersion === scope.sourceVersion ? scope.state.approved : null, audit: scope.state.audit, bundle: scope.allowed ? scope.report.bundle : null, findings: [...qualityFindings(scope.report), { title: "Repository terminology requires review", detail: "Source coding has not been independently validated. Original values are preserved; no silent correction is performed." }, { title: "Separate patient identities", detail: "The two repository bundles describe different patients. They must not be merged or compared as visits for one patient." }, ...(String(scope.report.birthDate).length < 10 ? [{ title: "Incomplete birth date", detail: "Only the year is documented. Exact date and age are not inferred." }] : [])], notice: "Repository demonstration only. Permission grant is simulated for this hackathon. Source facts require clinician review; full HL7/ABDM validation remains required." });
+  const view = (scope: Awaited<ReturnType<typeof load>>) => ({ reportId: scope.report.reportId, patientId: scope.report.patientId, name: scope.report.name, clinicalSource: authProvider() === "supabase" ? "Supabase FHIR record" : "Repository sample", retrievedAt: scope.retrievedAt, birthDate: scope.report.birthDate, hospitalId: scope.report.hospitalId, clinicalDate: scope.report.clinicalDate, sourceUrl: scope.report.source, sha256: scope.report.sha256, sourceVersion: scope.sourceVersion, keyResults: scope.allowed ? scope.report.bundle.entry.flatMap(entry => {
+    const resource = entry.resource as Record<string, unknown>;
+    const quantity = resource.valueQuantity as { value?: number; unit?: string; code?: string } | undefined;
+    if (resource.resourceType !== "Observation" || !quantity || typeof quantity.value !== "number" || !Number.isFinite(quantity.value)) return [];
+    const code = resource.code as { text?: string; coding?: { display?: string }[] } | undefined;
+    return [{ id: String(resource.id), label: code?.text ?? code?.coding?.[0]?.display ?? "Unnamed measurement", value: quantity.value, unit: quantity.unit ?? quantity.code ?? "unit not recorded", date: typeof resource.effectiveDateTime === "string" ? resource.effectiveDateTime : null }];
+  }) : [], consent: scope.state.consent, allowed: scope.allowed, approval: scope.allowed && scope.state.approved?.sourceVersion === scope.sourceVersion ? scope.state.approved : null, audit: scope.state.audit, bundle: scope.allowed ? scope.report.bundle : null, findings: [...qualityFindings(scope.report), { title: "Repository terminology requires review", detail: "Source coding has not been independently validated. Original values are preserved; no silent correction is performed." }, { title: "Separate patient identities", detail: "The two repository bundles describe different patients. They must not be merged or compared as visits for one patient." }, ...(String(scope.report.birthDate).length < 10 ? [{ title: "Incomplete birth date", detail: "Only the year is documented. Exact date and age are not inferred." }] : [])], notice: "Repository demonstration only. Permission grant is simulated for this hackathon. Source facts require clinician review; full HL7/ABDM validation remains required." });
   router.get("/dataset", async c => {
     await hooks.getSession(c);
     const query = (c.req.query("q") ?? "").trim().toLocaleLowerCase();
@@ -68,7 +83,7 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
   });
   const callAi = async (c: Context, voice: boolean) => {
     const scope = await load(c); requireAccess(scope);
-    const schema = voice ? z.object({ audioBase64: z.string().min(1).max(1280000), sampleRate: z.literal(16000) }) : z.object({ question: z.string().trim().min(1).max(4000) });
+    const schema = voice ? z.object({ audioBase64: z.string().min(1).max(1280000), sampleRate: z.literal(16000) }) : z.object({ question: z.string().trim().min(1).max(4000), history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(4000) })).max(6).default([]) });
     const parsed = schema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) throw new ClinicalError(400, "INVALID_REQUEST", "Supply a question or 16 kHz PCM recording up to 30 seconds.");
     const key = process.env.RAG_SERVICE_API_KEY;
@@ -84,6 +99,35 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
     audit(fresh, voice ? "NOVA_VOICE_EVIDENCE_RETURNED" : "BEDROCK_TEXT_EVIDENCE_RETURNED"); await hooks.persist(fresh.session); return c.json(result);
   };
   router.post("/reports/:id/chat", c => callAi(c, false));
+  router.post("/reports/:id/chat/stream", async c => {
+    const initial = await load(c); requireAccess(initial);
+    const response = await callAi(c, false);
+    const result = await response.json() as Answer;
+    c.header("X-Accel-Buffering", "no");
+    return streamSSE(c, async stream => {
+      await stream.writeSSE({ event: "answer.start", data: JSON.stringify({ verified: true }) });
+      for (const paragraph of result.answer.split("\n\n")) {
+        if (stream.aborted) return;
+        const fresh = await load(c);
+        if (!fresh.allowed || fresh.sourceVersion !== initial.sourceVersion) {
+          await stream.writeSSE({ event: "answer.error", data: JSON.stringify({ message: "Access changed. The answer was stopped." }) });
+          return;
+        }
+        const words = (paragraph + "\n\n").match(/\S+\s*/g) ?? [];
+        for (let i = 0; i < words.length; i += 5) {
+          if (stream.aborted) return;
+          await stream.writeSSE({ event: "answer.delta", data: JSON.stringify({ text: words.slice(i, i + 5).join("") }) });
+          await stream.sleep(22);
+        }
+      }
+      const fresh = await load(c);
+      if (!fresh.allowed || fresh.sourceVersion !== initial.sourceVersion) {
+        await stream.writeSSE({ event: "answer.error", data: JSON.stringify({ message: "Access changed. Refresh before continuing." }) });
+        return;
+      }
+      await stream.writeSSE({ event: "answer.complete", data: JSON.stringify(result) });
+    });
+  });
   router.post("/reports/:id/voice", c => callAi(c, true));
   router.post("/reports/:id/approve", async c => {
     const scope = await load(c); requireAccess(scope); const input = z.object({ text: z.string().trim().min(1).max(24000), sourceVersion: z.string() }).safeParse(await c.req.json().catch(() => null));

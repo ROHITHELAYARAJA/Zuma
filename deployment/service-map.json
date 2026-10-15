@@ -20,7 +20,7 @@
     "status": "38 separate clinical evidence and limitation documents indexed",
     "knowledgeBaseId": "LZASC0PVMX",
     "dataSourceId": "OYF0748ZJG",
-    "lastIngestionJob": "AS9DMSNGAH",
+    "lastIngestionJob": "BCS7KUJVMJ",
     "voiceOutput": "Amazon Polly; native Nova output is optional strict mode",
     "search": "Bedrock MANAGED knowledge base; no separate OpenSearch collection",
     "evidenceFormat": "readable-v3, one clinical entry per indexed document"
@@ -58,6 +58,7 @@
     "warning": "Repository terminology requires clinician review. The original /workspace remains a separate generated-data demo.",
     "answerContext": "Only AWS retrieved passages are sent to GLM; bundled manifest supplies scope and source identifiers",
     "dataType": "Public NHA repository samples; not live hospital records",
-    "answerFormat": "English sections with numbered citations and quote support verification"
+    "answerFormat": "Concise doctor-facing brief; verified answer streamed over SSE with source citations",
+    "clinicalRecordProvider": "Supabase FHIR bundle with pinned identity, content and version checks"
   }
 }

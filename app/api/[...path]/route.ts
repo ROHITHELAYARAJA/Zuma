@@ -22,14 +22,15 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     if (length > 1048576) return Response.json({ error: 'BODY_TOO_LARGE', message: 'Request exceeds 1 MB.' }, { status: 413 });
     const body = ['GET', 'HEAD'].includes(request.method) ? undefined : await request.arrayBuffer();
     if (body && body.byteLength > 1048576) return Response.json({ error: 'BODY_TOO_LARGE', message: 'Request exceeds 1 MB.' }, { status: 413 });
-    const upstream = await fetch(destination, { method: request.method, headers, body, cache: 'no-store', redirect: 'manual', signal: AbortSignal.timeout(170000) });
+    const upstream = await fetch(destination, { method: request.method, headers, body, cache: 'no-store', redirect: 'manual', signal: AbortSignal.any([request.signal, AbortSignal.timeout(170000)]) });
     const outgoing = new Headers();
     for (const name of ['content-type', 'content-disposition', 'retry-after']) {
       const value = upstream.headers.get(name);
       if (value) outgoing.set(name, value);
     }
     for (const cookie of upstream.headers.getSetCookie()) outgoing.append('set-cookie', cookie);
-    outgoing.set('cache-control', 'no-store');
+    outgoing.set('cache-control', 'no-store, no-transform');
+    if (upstream.headers.get('content-type')?.includes('text/event-stream')) outgoing.set('x-accel-buffering', 'no');
     outgoing.set('x-content-type-options', 'nosniff');
     return new Response(upstream.body, { status: upstream.status, headers: outgoing });
   } catch {

@@ -18,8 +18,13 @@ class Scope(BaseModel):
     patientId: str = Field(max_length=100)
     sourceVersion: str = Field(min_length=1, max_length=128)
 
+class ChatTurn(BaseModel):
+    role: str = Field(pattern="^(user|assistant)$")
+    content: str = Field(min_length=1, max_length=4000)
+
 class Question(Scope):
     question: str = Field(min_length=1, max_length=4000)
+    history: list[ChatTurn] = Field(default_factory=list, max_length=6)
 
 class Speech(Scope):
     audioBase64: str = Field(min_length=1, max_length=1280000)
@@ -31,12 +36,12 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"ok": True, "service": "zuma-aws", "awsConfigured": bool(os.environ.get("BEDROCK_KNOWLEDGE_BASE_ID")), "cloudConnectionTested": False, "answerFormat": "english-cited-sections-v2", "textModel": os.environ.get("BEDROCK_TEXT_MODEL_ID"), "retrievalProvider": "bedrock-managed", "answerContext": "AWS retrieval results only"}
+    return {"ok": True, "service": "zuma-aws", "awsConfigured": bool(os.environ.get("BEDROCK_KNOWLEDGE_BASE_ID")), "cloudConnectionTested": False, "answerFormat": "concise-cited-clinical-brief-v4", "textModel": os.environ.get("BEDROCK_TEXT_MODEL_ID"), "retrievalProvider": "bedrock-managed", "answerContext": "AWS retrieval results only"}
 
 @app.post("/answer", dependencies=[Depends(authorized)])
 async def answer(body: Question):
     try:
-        return await asyncio.wait_for(asyncio.to_thread(answer_question, body.question, body.reportId, body.patientId, body.sourceVersion), timeout=90)
+        return await asyncio.wait_for(asyncio.to_thread(answer_question, body.question, body.reportId, body.patientId, body.sourceVersion, [turn.model_dump() for turn in body.history]), timeout=90)
     except Exception as exc:
         code = str(exc) if isinstance(exc, ValueError) else type(exc).__name__
         raise HTTPException(503, code) from None

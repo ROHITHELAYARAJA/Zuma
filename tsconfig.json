@@ -25,7 +25,12 @@
     ],
     "incremental": true,
     "allowJs": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -37,7 +42,9 @@
     "integrations",
     "tests",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "components",
+    "lib"
   ],
   "exclude": [
     "node_modules"

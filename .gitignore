@@ -20,3 +20,4 @@ deployment/*.env
 .venv/
 __pycache__/
 *.egg-info/
+.next-verify/

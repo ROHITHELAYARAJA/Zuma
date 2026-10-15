@@ -35,9 +35,12 @@ def main():
             title = report["name"] + " | " + (facts[index]["title"] if index < len(facts) else "Source limitations")
             document = '<!doctype html><html lang="en"><meta charset="utf-8"><title>' + html.escape(title) + '</title><body><h1>' + html.escape(title) + '</h1><p>' + html.escape(statement) + '</p></body></html>'
             path = root / "data/abdm/evidence" / (report["reportId"] + "-fact-" + str(index + 1) + ".html")
+            changed = not path.exists() or path.read_bytes() != document.encode("utf-8")
             path.write_text(document, encoding="utf-8")
             meta = Path(str(path) + ".metadata.json")
             meta.write_text(json.dumps(metadata, indent=2) + "\n")
+            if not changed:
+                continue
             for file in (path, meta):
                 s3.put_object(Bucket=bucket, Key="evidence/" + file.name, Body=file.read_bytes(), ContentType="text/html" if file.suffix == ".html" else "application/json", ServerSideEncryption="aws:kms", SSEKMSKeyId=os.environ["S3_KMS_KEY_ID"])
         print(report["reportId"], "uploaded", len(statements), "separate evidence documents from encrypted S3 raw source")
