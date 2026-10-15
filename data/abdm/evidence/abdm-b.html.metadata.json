@@ -34,6 +34,13 @@
         "stringValue": "353a53684d81d181437bd2988b770741c705bc6c9a2874c86b9dda1b24d9d9ff"
       },
       "includeForEmbedding": false
+    },
+    "evidence_format": {
+      "value": {
+        "type": "STRING",
+        "stringValue": "readable-v2"
+      },
+      "includeForEmbedding": false
     }
   }
 }

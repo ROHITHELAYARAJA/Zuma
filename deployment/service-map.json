@@ -20,9 +20,10 @@
     "status": "created-two-documents-indexed",
     "knowledgeBaseId": "LZASC0PVMX",
     "dataSourceId": "OYF0748ZJG",
-    "lastIngestionJob": "E7KIRJI331",
+    "lastIngestionJob": "BKXBJ3HBB5",
     "voiceOutput": "Amazon Polly; native Nova output is optional strict mode",
-    "search": "Bedrock MANAGED knowledge base; no separate OpenSearch collection"
+    "search": "Bedrock MANAGED knowledge base; no separate OpenSearch collection",
+    "evidenceFormat": "readable-v2"
   },
   "hosting": {
     "vercel": {
@@ -54,6 +55,8 @@
     "directory": "data/abdm/evidence",
     "modelTraining": false,
     "clinicalWorkspaceAdapter": "implemented-at-/abdm",
-    "warning": "Repository terminology requires clinician review. The original /workspace remains a separate generated-data demo."
+    "warning": "Repository terminology requires clinician review. The original /workspace remains a separate generated-data demo.",
+    "answerContext": "Only AWS retrieved passages are sent to GLM; bundled manifest supplies scope and source identifiers",
+    "dataType": "Public NHA repository samples; not live hospital records"
   }
 }

@@ -31,7 +31,7 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"ok": True, "service": "zuma-aws", "awsConfigured": bool(os.environ.get("BEDROCK_KNOWLEDGE_BASE_ID")), "cloudConnectionTested": False}
+    return {"ok": True, "service": "zuma-aws", "awsConfigured": bool(os.environ.get("BEDROCK_KNOWLEDGE_BASE_ID")), "cloudConnectionTested": False, "answerFormat": "english-cited-sections-v2", "textModel": os.environ.get("BEDROCK_TEXT_MODEL_ID"), "retrievalProvider": "bedrock-managed", "answerContext": "AWS retrieval results only"}
 
 @app.post("/answer", dependencies=[Depends(authorized)])
 async def answer(body: Question):
