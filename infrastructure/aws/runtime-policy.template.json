@@ -1,0 +1,66 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RetrieveScopedKnowledgeBase",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:Retrieve",
+        "bedrock:StartIngestionJob",
+        "bedrock:GetIngestionJob"
+      ],
+      "Resource": "${BEDROCK_KNOWLEDGE_BASE_ARN}"
+    },
+    {
+      "Sid": "InvokeSelectedTextModel",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "${BEDROCK_TEXT_MODEL_ARN}"
+      ]
+    },
+    {
+      "Sid": "ListScopedStorage",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::${S3_REPORT_BUCKET}",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "evidence/*",
+            "raw/*",
+            "fhir/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadWriteSyntheticObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${S3_REPORT_BUCKET}/evidence/*",
+        "arn:aws:s3:::${S3_REPORT_BUCKET}/raw/*",
+        "arn:aws:s3:::${S3_REPORT_BUCKET}/fhir/*"
+      ]
+    },
+    {
+      "Sid": "UseStorageEncryptionKey",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey",
+        "kms:DescribeKey"
+      ],
+      "Resource": "${S3_KMS_KEY_ID}"
+    }
+  ]
+}

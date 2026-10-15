@@ -1,0 +1,28 @@
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+const root = "vendor/ABDM-wrapper";
+const commit = JSON.parse(readFileSync("vendor/abdm-upstream-lock.json","utf8")).commit as string;
+const escape = (s: string) => s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]!);
+const paths = ["TestBundle.json","OP_Consultation_fhir_bundle.json"];
+mkdirSync("data/abdm/evidence",{recursive:true});
+const reports = paths.map((file,index)=>{
+  const path = `${root}/sample-hip/src/main/resources/${file}`;
+  const raw = readFileSync(path,"utf8");
+  const bundle = JSON.parse(raw);
+  const resources = bundle.entry.map((e: {resource: Record<string,unknown>})=>e.resource);
+  const patient = resources.find((r: Record<string,unknown>)=>r.resourceType==="Patient");
+  const hospitalId = index===0?"A":"B";
+  const source = `https://github.com/NHA-ABDM/ABDM-wrapper/blob/${commit}/sample-hip/src/main/resources/${file}`;
+  const report = {reportId:`abdm-${hospitalId.toLowerCase()}`,hospitalId,patientId:String(patient.id),name:patient.name?.[0]?.text ?? "Unnamed repository patient",birthDate:patient.birthDate??null,sex:patient.gender??"unknown",clinicalDate:resources.find((r: Record<string,unknown>)=>r.resourceType==="Composition")?.date??null,file,sha256:createHash("sha256").update(raw).digest("hex"),source,commit,bundle};
+  writeFileSync(`data/abdm/${file}`,raw);
+  const text = `Repository demonstration fixture, not clinical guidance. Assigned test facility: Hospital ${hospitalId}. Original patient identity preserved. Source: ${source}. SHA256: ${report.sha256}. The source terminology has not been clinically validated.\n`+JSON.stringify(bundle,null,2);
+  writeFileSync(`data/abdm/evidence/${report.reportId}.html`,`<!doctype html><html lang="en"><meta charset="utf-8"><title>ABDM repository fixture ${hospitalId}</title><body><pre>${escape(text)}</pre></body></html>`);
+  writeFileSync(`data/abdm/evidence/${report.reportId}.html.metadata.json`,JSON.stringify({metadataAttributes:{patient_id:{value:{type:"STRING",stringValue:report.patientId},includeForEmbedding:true},hospital_id:{value:{type:"STRING",stringValue:hospitalId},includeForEmbedding:true},record_id:{value:{type:"STRING",stringValue:report.reportId},includeForEmbedding:true},dataset:{value:{type:"STRING",stringValue:"nha-abdm-repository"},includeForEmbedding:true},source_sha256:{value:{type:"STRING",stringValue:report.sha256},includeForEmbedding:false}}},null,2));
+  return report;
+});
+writeFileSync("data/abdm/dataset.json",JSON.stringify({dataset:"nha-abdm-repository",commit,license:"Apache-2.0; upstream license retained in vendor/ABDM-wrapper/LICENSE",notice:"Two distinct patients. Hospital assignments are local test roles, not original provenance. Original FHIR content is unmodified. No cross-patient merge. Not validated for clinical use.",reports},null,2));
+writeFileSync("data/abdm/evaluation.json",JSON.stringify({purpose:"Grounding checks for text answers and spoken versions of the same answers; not model training",cases:[{question:"Do these two reports describe the same patient?",expected:"No. The repository bundles contain different patient identities. Do not combine them."},{patientId:reports[0].patientId,question:"What allergy text is documented?",expected:"Walnuts is present in the source allergy code text. Do not silently replace it with a clinically validated code."},{patientId:reports[1].patientId,question:"What is the exact date of birth?",expected:"Only the year 1991 is documented. The day and month are unknown."},{question:"What are Ravi's recent kidney results?",expected:"This repository dataset does not contain Ravi. Do not use the older generated fixtures."}]},null,2));
+const quote=(v:unknown)=>v===null?"null":"'"+String(v).replace(/'/g,"''")+"'";
+const schema = `create table if not exists public.abdm_repository_reports (report_id text primary key,hospital_id text not null references public.hospitals(id),source_patient_id text not null,patient_name text not null,birth_date_raw text,source_url text not null,source_commit text not null,sha256 text not null,fhir_bundle jsonb not null,validation_status text not null default 'review_required',created_at timestamptz not null default now());\nalter table public.abdm_repository_reports enable row level security;\nrevoke all on public.abdm_repository_reports from anon,authenticated;\ngrant select,insert,update on public.abdm_repository_reports to service_role;\n`;
+writeFileSync("deployment/abdm-repository-data.sql",schema+reports.map(r=>`insert into public.abdm_repository_reports(report_id,hospital_id,source_patient_id,patient_name,birth_date_raw,source_url,source_commit,sha256,fhir_bundle) values (${[r.reportId,r.hospitalId,r.patientId,r.name,r.birthDate,r.source,commit,r.sha256,JSON.stringify(r.bundle)].map(quote).join(",") }::jsonb) on conflict(report_id) do nothing;`).join("\n"));
+console.log(JSON.stringify({commit,reports:reports.length,evidenceDocuments:reports.length,output:"data/abdm",databaseSeed:"deployment/abdm-repository-data.sql"}));

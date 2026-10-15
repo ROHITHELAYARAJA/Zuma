@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --brand-white:#fff; --brand-ink:#111; --brand-orange:#ff5b3e;
+  --brand-yellow:#ffd84d; --brand-border:#dedede;
+  --font-heading:'Space Grotesk Variable','Space Grotesk',sans-serif;
+  --font-body:'DM Sans Variable','DM Sans',sans-serif;
+  --font-hand:'Kalam',cursive;
+  --font-space-grotesk:var(--font-heading);
+  --font-dm-sans:var(--font-body);
+  --font-kalam:var(--font-hand);
+  font-family:var(--font-body); color:var(--brand-ink); background:#fff;
+  font-synthesis:none; text-rendering:optimizeLegibility;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;min-width:320px}
+button,input,textarea,select{font:inherit}
+button,a{-webkit-tap-highlight-color:transparent}
+button:not(:disabled),a{touch-action:manipulation}
+button:disabled{cursor:not-allowed}
+a{color:inherit}
+h1,h2,h3,h4{font-family:var(--font-heading)}
+::selection{background:#ffd84d;color:#111}
+:focus-visible{outline:3px solid #111;outline-offset:4px}
+.skip-link{position:fixed;top:-80px;left:20px;z-index:9999;background:#ffd84d;padding:12px 20px;border:2px solid #111;border-radius:8px}
+.skip-link:focus{top:16px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

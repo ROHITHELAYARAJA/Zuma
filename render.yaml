@@ -1,0 +1,34 @@
+# Template only. This does not provision anything until explicitly deployed.
+# Synthetic demo with no real clinical authentication. Review paid disk/plan costs.
+services:
+  - type: web
+    name: clinical-workspace-api
+    runtime: node
+    plan: starter
+    autoDeploy: false
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: clinical-workspace-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DEMO_MODE
+        value: "true"
+      - key: ALLOW_PUBLIC_DEMO
+        value: "true"
+      - key: DB_PATH
+        value: /var/data/clinical.sqlite
+      - key: AI_PROVIDER
+        value: local
+      - key: AWS_CLOUD_ENABLED
+        value: "false"
+      - key: APP_ORIGINS
+        sync: false

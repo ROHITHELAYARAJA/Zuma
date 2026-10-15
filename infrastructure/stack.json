@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "project": "Clinical workspace",
+  "deploymentStatus": "not-provisioned",
+  "data": "synthetic-only",
+  "runtime": {
+    "node": "24 LTS",
+    "frontend": "Next.js 16.4.1 / React 19.3",
+    "api": "Hono",
+    "hospitalServices": 2
+  },
+  "platforms": [
+    {
+      "id": "vercel",
+      "role": "Next.js presentation, workspace and same-origin API proxy",
+      "routes": [
+        "/",
+        "/workspace",
+        "/setup"
+      ],
+      "requiredEnvironment": [
+        "API_PROXY_TARGET",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+      ],
+      "secretRule": "No AWS or Supabase service-role credentials in NEXT_PUBLIC variables"
+    },
+    {
+      "id": "render",
+      "role": "Three independent Node services: central API plus hospital A and B",
+      "blueprint": "infrastructure/render.yaml",
+      "operatorActions": [
+        "Set each actual hospital HTTPS URL on central API",
+        "Set APP_ORIGINS to actual Next.js origin",
+        "Review three paid plans and persistent disks before deploying",
+        "Use strong per-hospital keys and protect administrator endpoints"
+      ]
+    },
+    {
+      "id": "supabase",
+      "role": "User identity and central application state",
+      "schema": "infrastructure/supabase.sql",
+      "status": "requires-project-and-schema-application",
+      "requiredEnvironment": [
+        "AUTH_PROVIDER=supabase",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "authorization": "JWT identity and active membership plus live patient consent; service-role keys are backend-only"
+    },
+    {
+      "id": "aws-s3",
+      "role": "Private encrypted synthetic source snapshots, normalized FHIR and indexed evidence",
+      "template": "infrastructure/aws/storage-stack.json",
+      "paths": {
+        "raw": "raw/hospital-{A|B}/{patient}/{source}.json",
+        "fhir": "fhir/hospital-{A|B}/{patient}/{record}/v{version}.json",
+        "search": "evidence/hospital-{A|B}/{patient}/{record}/v{version}.html",
+        "metadata": "evidence/hospital-{A|B}/{patient}/{record}/v{version}.html.metadata.json"
+      },
+      "requiredEnvironment": [
+        "S3_REPORT_BUCKET",
+        "S3_KMS_KEY_ID"
+      ],
+      "encryption": "SSE-KMS preferred; explicit AES256 supported for separately configured demo buckets"
+    },
+    {
+      "id": "bedrock-knowledge-base",
+      "role": "Semantic retrieval of normalized evidence documents",
+      "defaultType": "MANAGED",
+      "sourceType": "MANAGED_KNOWLEDGE_BASE_CONNECTOR",
+      "connector": "S3",
+      "sourcePrefix": "evidence/",
+      "setupScript": "infrastructure/aws/provision-knowledge-base.ts",
+      "requiredEnvironment": [
+        "BEDROCK_KNOWLEDGE_BASE_ID",
+        "BEDROCK_DATA_SOURCE_ID",
+        "BEDROCK_KB_MODE=managed"
+      ],
+      "readiness": "Data source AVAILABLE and ingestion COMPLETE required; configuration alone does not establish readiness",
+      "security": [
+        "Live server-side identity and consent before retrieval",
+        "AND patient, hospital, authorized record and category filters",
+        "Exact current record/version/hash postcheck",
+        "Never return unknown retrieved chunks",
+        "Recheck permissions again before releasing generated answer"
+      ]
+    },
+    {
+      "id": "bedrock-text",
+      "role": "Converse generation using authorized retrieved evidence",
+      "requiredEnvironment": [
+        "AI_PROVIDER=bedrock",
+        "AWS_CLOUD_ENABLED=true",
+        "AWS_REGION",
+        "BEDROCK_TEXT_MODEL_ID",
+        "explicit AWS credential source"
+      ],
+      "security": "Explicit output tokens, document instructions treated as untrusted, JSON/citation membership validation; clinician review still required"
+    },
+    {
+      "id": "voice",
+      "role": "Browser recognition and synthesis where supported",
+      "status": "browser-dependent",
+      "awsVoice": "Nova Sonic is not implemented"
+    }
+  ],
+  "setupSequence": [
+    "Deploy storage-stack.json manually with IAM capability; retain output bucket/key/connector-role identifiers",
+    "Set explicit AWS configuration and BEDROCK_KB_ROLE_ARN",
+    "Run aws:kb create --apply only after AWS_PROVISIONING_ENABLED=true",
+    "Check aws:kb status until ACTIVE; save BEDROCK_KNOWLEDGE_BASE_ID",
+    "Run aws:kb connect --apply; save BEDROCK_DATA_SOURCE_ID",
+    "Check aws:kb source-status until AVAILABLE",
+    "Generate local sample files with seed:samples; optionally upload with --upload --apply",
+    "Run aws:kb ingest --apply and check ingestion-status until COMPLETE",
+    "Render exact runtime policy, attach to the actual API runtime identity and tighten connector role trust to the created KB ARN",
+    "Configure CloudTrail knowledge-base data-event selection explicitly",
+    "Configure Supabase project and Render services, then set Vercel API_PROXY_TARGET and redeploy",
+    "A hosted system is not claimed complete until the actual configured services have been exercised"
+  ],
+  "files": {
+    "samplesGenerator": "infrastructure/aws/seed-samples.ts",
+    "runtimePolicy": "infrastructure/aws/runtime-policy.template.json",
+    "cloudTrail": "infrastructure/aws/cloudtrail-selector.template.json"
+  },
+  "referenceLinks": [
+    "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-create.html",
+    "https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-ds-s3.html",
+    "https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Retrieve.html",
+    "https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-ds.html",
+    "https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_StartIngestionJob.html"
+  ]
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>HIU</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<script>
+  function searchPatient() {
+    var url = 'http://localhost:8082/v1/patient/' + $('#abha_address').val();
+    $.ajax({
+      url: url,
+      method: 'GET',
+      success: function(response) {
+        $("#tbodyId").empty();
+        console.log(response);
+        if (response) {
+           var consents = response.consents;
+           $.each(consents, function(i, consent) {
+              var careContexts = consent.consentDetail.careContexts;
+              var careContextsStr = "";
+              $.each(careContexts, function(j, careContext) {
+                if (j > 0) {
+                  careContextsStr += ", " + careContext.careContextReference;
+                } else {
+                  careContextsStr += careContext.careContextReference;
+                }
+              });
+              var $tr = $('<tr>').append(
+                  $('<td class="ci">').text(consent.consentDetail.consentId),
+                  $('<td>').text(careContextsStr),
+                  $('<td>').text(consent.consentDetail.hip.id),
+                  $('<td>').append('<button type="button" class="btn btn-success btn-sm get-health-info" title="Request Health Information"><span class="glyphicon glyphicon-download-alt"></span></button> <button type="button" class="btn btn-success btn-sm get-health-status" title="Display Health Information"><span class="glyphicon glyphicon-play"></span></button>')
+              );
+              $("#tbodyId").append($tr);
+            });
+            attachEventListener();
+        }
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.log(errorThrown);
+      }
+    });
+  }
+  
+  var requestId = null;
+
+  function attachEventListener() {
+    $(".get-health-info").on('click', function(e) {
+    $("#jsonTextArea").css('visibility','hidden');
+      var consentId = $(this).closest("tr")   // Finds the closest row <tr> 
+                        .find(".ci")     // Gets a descendent with class="ci"
+                        .text();         // Retrieves the text within <td>
+
+      console.log(consentId); 
+      requestId = generateUUID();     // Outputs the answer
+      var requestBody = {
+        "requestId": requestId,
+        "consentId": consentId
+      }
+      var url = 'http://localhost:8082/v1/health-information/fetch-records';
+      $.ajax({
+        url: url,
+        method: 'POST',
+        data: JSON.stringify(requestBody),
+        contentType: "application/json",
+        success: function(response) {
+          console.log(response);
+          success.style.display = "block";
+        }, error: function(jqXHR, textStatus, errorThrown) {
+          console.log(errorThrown);
+          failure.style.display = "block";
+        }
+      });
+
+    });
+
+    $(".get-health-status").on('click', function(e) {
+      var url = 'http://localhost:8082/v1/health-information/status/' + requestId;
+      $.ajax({
+        url: url,
+        method: 'GET',
+        success: function(response) {
+          console.log(response);
+          var responseCopy = response;
+          $.each(response.decryptedHealthInformationEntries, function(i, entry) {
+            responseCopy.decryptedHealthInformationEntries[i].bundleContent = JSON.parse(entry.bundleContent);
+          });
+          var jsonValue = JSON.stringify(responseCopy.decryptedHealthInformationEntries, undefined, 4);
+          $("#jsonTextArea").val(jsonValue);
+          $("#jsonTextArea").css('visibility','visible');
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log(errorThrown);
+        }
+      });
+    });
+  }
+
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+  
+  setInterval(() => {
+    success.style.display = "none";
+    failure.style.display = "none";
+  }, 4000);
+  
+</script>
+<div class="container">
+  <h2 class="p-3 mb-2 bg-gradient-secondary">HIU</h2>
+  <div class="container">  
+  <h3>Patient</h3>  
+  
+
+  <div class="form-group">  
+    <label for="abha_address">ABHA Address</label>  
+    <input class="form-control" id="abha_address" placeholder="ABHA Address" width="300">  
+  </div>  
+      
+  <button class="btn btn-info" onclick="searchPatient()">Search</button>  
+  </br>
+  </br>
+  <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <table class="table table-bordered table-hover" id="consent_table">
+            <thead class="thead thead-dark">
+              <tr>
+                <th scope="col">Consent Id</th>
+                <th scope="col">Care Contexts</th>
+                <th scope="col">HIP</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyId"></tbody>
+          </table>
+        </div>
+      </div>
+  </div>
+  <div class="alert alert-success" style="float:right;display:none;" id="success">
+    The health information request has been submitted.
+  </div>
+  <div class="alert alert-danger" style="float:right;display:none;" id="failure">
+    Something went wrong while fetching health information.
+  </div>
+  <div class="container">
+    <textarea id="jsonTextArea" cols=150 rows=60 style="visibility: hidden;"></textarea>
+  </div>
+  </div>
+</div>
+
+</body>
+</html>
+

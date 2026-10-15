@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.2'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.openapi.generator' version '6.6.0'
+}
+
+group = 'com.nha.abdm.hiu.sample'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation project(':generated')
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+openApiGenerate {
+    generatorName.set("java")
+    inputSpec.set("$rootDir/specs/hiu-facade.yaml")
+    outputDir.set("$rootDir/generated")
+    apiPackage.set("in.nha.abdm.wrapper.client.api")
+    invokerPackage.set("in.nha.abdm.wrapper.client.invoker")
+    modelPackage.set("in.nha.abdm.wrapper.client.model")
+}

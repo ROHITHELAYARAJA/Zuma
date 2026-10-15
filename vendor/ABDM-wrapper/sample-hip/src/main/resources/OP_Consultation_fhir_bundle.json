@@ -1,0 +1,820 @@
+{
+	"identifier": {
+		"system": "http://hip.in",
+		"value": "1ad6c4a6-b049-11ee-9c45-0050568837bb"
+	},
+	"entry": [
+		{
+			"resource": {
+				"date": "2024-01-04T15:36:45+05:30",
+				"custodian": {
+					"reference": "Organization/66",
+					"display": "Demo Hospital, Gujarat"
+				},
+				"meta": {
+					"lastUpdated": "2024-01-04T15:36:45+05:30",
+					"versionId": "1",
+					"profile": [
+						"https://nrces.in/ndhm/fhir/r4/StructureDefinition/OPConsultRecord"
+					]
+				},
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb",
+					"display": "Sonu  Kumar"
+				},
+				"author": [
+					{
+						"reference": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb",
+						"display": "doctor  desk"
+					}
+				],
+				"section": [
+					{
+						"entry": [
+							{
+								"reference": "MedicationRequest/1ad6aa0c-b049-11ee-9c41-0050568837bb"
+							},
+							{
+								"reference": "MedicationRequest/1ad6ac14-b049-11ee-9c43-0050568837bb"
+							}
+						],
+						"code": {
+							"coding": [
+								{
+									"system": "http://snomed.info/sct",
+									"code": "721912009",
+									"display": "Medication summary document"
+								}
+							]
+						},
+						"title": "Medications"
+					},
+					{
+						"entry": [
+							{
+								"reference": "Condition/1ad5326c-b049-11ee-9c39-0050568837bb"
+							}
+						],
+						"code": {
+							"coding": [
+								{
+									"system": "http://snomed.info/sct",
+									"code": "422843007",
+									"display": "Chief complaint section"
+								}
+							]
+						},
+						"title": "Chief Complaints"
+					},
+					{
+						"entry": [
+							{
+								"reference": "Condition/1ad53410-b049-11ee-9c3a-0050568837bb"
+							}
+						],
+						"code": {
+							"coding": [
+								{
+									"system": "http://snomed.info/sct",
+									"code": "371529009",
+									"display": "History and physical report"
+								}
+							]
+						},
+						"title": "Medical History"
+					},
+					{
+						"entry": [
+							{
+								"reference": "Observation/height1ad3e8d0-b049-11ee-9c36-0050568837bb"
+							},
+							{
+								"reference": "Observation/weight1ad3e8d0-b049-11ee-9c36-0050568837bb"
+							},
+							{
+								"reference": "Observation/bmi1ad3e8d0-b049-11ee-9c36-0050568837bb"
+							},
+							{
+								"reference": "Observation/temperature1ad3e8d0-b049-11ee-9c36-0050568837bb"
+							},
+							{
+								"reference": "Observation/dbp1ad3e8d0-b049-11ee-9c36-0050568837bb"
+							},
+							{
+								"reference": "Observation/sbp1ad3e8d0-b049-11ee-9c36-0050568837bb"
+							},
+							{
+								"reference": "Observation/rr1ad3e8d0-b049-11ee-9c36-0050568837bb"
+							},
+							{
+								"reference": "Observation/pulse1ad3e8d0-b049-11ee-9c36-0050568837bb"
+							},
+							{
+								"reference": "Observation/1ad53a5a-b049-11ee-9c3f-0050568837bb"
+							}
+						],
+						"code": {
+							"coding": [
+								{
+									"system": "http://snomed.info/sct",
+									"code": "425044008",
+									"display": "Physical exam section"
+								}
+							]
+						},
+						"title": "Physical Examination"
+					},
+					{
+						"entry": [
+							{
+								"reference": "AllergyIntolerance/1ad5392e-b049-11ee-9c3e-0050568837bb"
+							},
+							{
+								"reference": "AllergyIntolerance/1ad53802-b049-11ee-9c3d-0050568837bb"
+							}
+						],
+						"code": {
+							"coding": [
+								{
+									"system": "http://snomed.info/sct",
+									"code": "722446000",
+									"display": "Allergy record"
+								}
+							]
+						},
+						"title": "Allergy Section"
+					},
+					{
+						"entry": [
+							{
+								"reference": "ServiceRequest/1ad5355a-b049-11ee-9c3b-0050568837bb"
+							},
+							{
+								"reference": "ServiceRequest/1ad53690-b049-11ee-9c3c-0050568837bb"
+							},
+							{
+								"reference": "ServiceRequest/1ad53b9a-b049-11ee-9c40-0050568837bb"
+							}
+						],
+						"code": {
+							"coding": [
+								{
+									"system": "http://snomed.info/sct",
+									"code": "721963009",
+									"display": "Order document"
+								}
+							]
+						},
+						"title": "Investigation Advice"
+					}
+				],
+				"id": "1ad3e826-b049-11ee-9c34-0050568837bb",
+				"encounter": {
+					"reference": "Encounter/1ad3e89e-b049-11ee-9c35-0050568837bb"
+				},
+				"type": {
+					"coding": [
+						{
+							"system": "http://snomed.info/sct",
+							"code": "371530004",
+							"display": "Clinical consultation report"
+						}
+					],
+					"text": "Clinical Consultation report"
+				},
+				"title": "Consultation Report",
+				"resourceType": "Composition",
+				"status": "final"
+			},
+			"fullUrl": "Composition/1ad3e826-b049-11ee-9c34-0050568837bb"
+		},
+		{
+			"resource": {
+				"identifier": [
+					{
+						"system": "https://doctor.ndhm.gov.in",
+						"type": {
+							"coding": [
+								{
+									"system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+									"code": "MD",
+									"display": "Medical License number"
+								}
+							]
+						},
+						"value": "21-1521-3828-3227"
+					}
+				],
+				"meta": {
+					"lastUpdated": "2024-01-04T15:36:45+05:30",
+					"versionId": "1",
+					"profile": [
+						"https://nrces.in/ndhm/fhir/r4/StructureDefinition/Practitioner"
+					]
+				},
+				"name": [
+					{
+						"text": "doctor  desk"
+					}
+				],
+				"id": "1ad3e902-b049-11ee-9c37-0050568837bb",
+				"resourceType": "Practitioner"
+			},
+			"fullUrl": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb"
+		},
+		{
+			"resource": {
+				"identifier": [
+					{
+						"system": "https://facility.ndhm.gov.in",
+						"type": {
+							"coding": [
+								{
+									"system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+									"code": "PRN",
+									"display": "Provider number"
+								}
+							]
+						},
+						"value": "4567823"
+					}
+				],
+				"meta": {
+					"profile": [
+						"https://nrces.in/ndhm/fhir/r4/StructureDefinition/Organization"
+					]
+				},
+				"name": "Demo Hospital, Gujarat",
+				"telecom": [
+					{
+						"system": "phone",
+						"use": "work",
+						"value": "+91 0120-6933404"
+					},
+					{
+						"system": "email",
+						"use": "work",
+						"value": "support-ngehospital@nic.in"
+					}
+				],
+				"id": "66",
+				"resourceType": "Organization"
+			},
+			"fullUrl": "Organization/66"
+		},
+		{
+			"resource": {
+				"identifier": [
+					{
+						"system": "https://healthid.ndhm.gov.in",
+						"type": {
+							"coding": [
+								{
+									"system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+									"code": "MR",
+									"display": "Medical record number"
+								}
+							]
+						},
+						"value": "22-7225-4829-5255"
+					}
+				],
+				"gender": "male",
+				"meta": {
+					"lastUpdated": "2024-01-04T15:36:45+05:30",
+					"versionId": "1",
+					"profile": [
+						"https://nrces.in/ndhm/fhir/r4/StructureDefinition/Patient"
+					]
+				},
+				"name": [
+					{
+						"text": "Sonu  Kumar"
+					}
+				],
+				"telecom": [
+					{
+						"system": "phone",
+						"use": "home",
+						"value": "+918882458079"
+					}
+				],
+				"id": "1ad3e934-b049-11ee-9c38-0050568837bb",
+				"birthDate": "1991",
+				"resourceType": "Patient"
+			},
+			"fullUrl": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Faroeze 200 mg oral tablet(Faropenem (as faropenem sodium) 200 mg oral tablet)"
+				},
+				"id": "1ad6aa7a-b049-11ee-9c42-0050568837bb",
+				"resourceType": "Medication"
+			},
+			"fullUrl": "Medication/1ad6aa7a-b049-11ee-9c42-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Utamide 50 mg oral tablet(Bicalutamide 50 mg oral tablet)"
+				},
+				"id": "1ad6ac3c-b049-11ee-9c44-0050568837bb",
+				"resourceType": "Medication"
+			},
+			"fullUrl": "Medication/1ad6ac3c-b049-11ee-9c44-0050568837bb"
+		},
+		{
+			"resource": {
+				"requester": {
+					"reference": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb"
+				},
+				"medicationReference": {
+					"reference": "Medication/1ad6aa7a-b049-11ee-9c42-0050568837bb"
+				},
+				"authoredOn": "2024-01-04T15:36:45+05:30",
+				"dosageInstruction": [
+					{
+						"text": "(1)-Twice a day (Duration:7)"
+					}
+				],
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"id": "1ad6aa0c-b049-11ee-9c41-0050568837bb",
+				"intent": "order",
+				"resourceType": "MedicationRequest",
+				"status": "active"
+			},
+			"fullUrl": "MedicationRequest/1ad6aa0c-b049-11ee-9c41-0050568837bb"
+		},
+		{
+			"resource": {
+				"requester": {
+					"reference": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb"
+				},
+				"medicationReference": {
+					"reference": "Medication/1ad6ac3c-b049-11ee-9c44-0050568837bb"
+				},
+				"authoredOn": "2024-01-04T15:36:45+05:30",
+				"dosageInstruction": [
+					{
+						"text": "(1)-Twice a day (Duration:8)"
+					}
+				],
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"id": "1ad6ac14-b049-11ee-9c43-0050568837bb",
+				"intent": "order",
+				"resourceType": "MedicationRequest",
+				"status": "active"
+			},
+			"fullUrl": "MedicationRequest/1ad6ac14-b049-11ee-9c43-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Height"
+				},
+				"effectiveDateTime": "2024-01-04T15:35:17+05:30",
+				"id": "height1ad3e8d0-b049-11ee-9c36-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final",
+				"valueQuantity": {
+					"unit": "CM",
+					"value": 170
+				}
+			},
+			"fullUrl": "Observation/height1ad3e8d0-b049-11ee-9c36-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Weight"
+				},
+				"effectiveDateTime": "2024-01-04T15:35:17+05:30",
+				"id": "weight1ad3e8d0-b049-11ee-9c36-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final",
+				"valueQuantity": {
+					"unit": "Kg",
+					"value": 68
+				}
+			},
+			"fullUrl": "Observation/weight1ad3e8d0-b049-11ee-9c36-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "BMI"
+				},
+				"effectiveDateTime": "2024-01-04T15:35:17+05:30",
+				"id": "bmi1ad3e8d0-b049-11ee-9c36-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final",
+				"valueQuantity": {
+					"unit": "kg/m2",
+					"value": 23.53
+				}
+			},
+			"fullUrl": "Observation/bmi1ad3e8d0-b049-11ee-9c36-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Temperature"
+				},
+				"effectiveDateTime": "2024-01-04T15:35:17+05:30",
+				"id": "temperature1ad3e8d0-b049-11ee-9c36-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final",
+				"valueQuantity": {
+					"unit": "°F",
+					"value": 99
+				}
+			},
+			"fullUrl": "Observation/temperature1ad3e8d0-b049-11ee-9c36-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Systolic Blood pressure"
+				},
+				"effectiveDateTime": "2024-01-04T15:35:17+05:30",
+				"id": "sbp1ad3e8d0-b049-11ee-9c36-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final",
+				"valueQuantity": {
+					"unit": "mmHg",
+					"value": 126
+				}
+			},
+			"fullUrl": "Observation/sbp1ad3e8d0-b049-11ee-9c36-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Diastolic Blood pressure"
+				},
+				"effectiveDateTime": "2024-01-04T15:35:17+05:30",
+				"id": "dbp1ad3e8d0-b049-11ee-9c36-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final",
+				"valueQuantity": {
+					"unit": "mmHg",
+					"value": 82
+				}
+			},
+			"fullUrl": "Observation/dbp1ad3e8d0-b049-11ee-9c36-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Respiratory Rate"
+				},
+				"effectiveDateTime": "2024-01-04T15:35:17+05:30",
+				"id": "rr1ad3e8d0-b049-11ee-9c36-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final",
+				"valueQuantity": {
+					"unit": "RPM",
+					"value": 46
+				}
+			},
+			"fullUrl": "Observation/rr1ad3e8d0-b049-11ee-9c36-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Pulse"
+				},
+				"effectiveDateTime": "2024-01-04T15:35:17+05:30",
+				"id": "pulse1ad3e8d0-b049-11ee-9c36-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final",
+				"valueQuantity": {
+					"unit": "BPM",
+					"value": 75
+				}
+			},
+			"fullUrl": "Observation/pulse1ad3e8d0-b049-11ee-9c36-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "DIAGNOSIS"
+				},
+				"valueString": "Lassa fever",
+				"effectiveDateTime": "2024-01-04T15:36:11+05:30",
+				"id": "1ad53a5a-b049-11ee-9c3f-0050568837bb",
+				"resourceType": "Observation",
+				"status": "final"
+			},
+			"fullUrl": "Observation/1ad53a5a-b049-11ee-9c3f-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Human rabies"
+				},
+				"onsetPeriod": {
+					"start": "2024-01-04T15:35:28+05:30"
+				},
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"recordedDate": "2024-01-04T15:35:28+05:30",
+				"id": "1ad5326c-b049-11ee-9c39-0050568837bb",
+				"clinicalStatus": {
+					"coding": [
+						{
+							"system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+							"code": "active",
+							"display": "active"
+						}
+					],
+					"text": "COMPLAIN"
+				},
+				"category": [
+					{
+						"coding": [
+							{
+								"system": "http://terminology.hl7.org/CodeSystem/condition-category",
+								"code": "problem-list-item",
+								"display": "Problem List Item"
+							}
+						],
+						"text": "problem list"
+					}
+				],
+				"resourceType": "Condition"
+			},
+			"fullUrl": "Condition/1ad5326c-b049-11ee-9c39-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"text": "Barbers' rash"
+				},
+				"onsetPeriod": {
+					"start": "2024-01-04T15:35:36+05:30"
+				},
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"recordedDate": "2024-01-04T15:35:36+05:30",
+				"id": "1ad53410-b049-11ee-9c3a-0050568837bb",
+				"clinicalStatus": {
+					"coding": [
+						{
+							"system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+							"code": "active",
+							"display": "active"
+						}
+					],
+					"text": "HISTORY"
+				},
+				"category": [
+					{
+						"coding": [
+							{
+								"system": "http://terminology.hl7.org/CodeSystem/condition-category",
+								"code": "problem-list-item",
+								"display": "Problem List Item"
+							}
+						],
+						"text": "problem list"
+					}
+				],
+				"resourceType": "Condition"
+			},
+			"fullUrl": "Condition/1ad53410-b049-11ee-9c3a-0050568837bb"
+		},
+		{
+			"resource": {
+				"requester": {
+					"reference": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb"
+				},
+				"code": {
+					"text": "ZN staining for AFB"
+				},
+				"authoredOn": "2024-01-04T15:35:43+05:30",
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"id": "1ad5355a-b049-11ee-9c3b-0050568837bb",
+				"category": [
+					{
+						"coding": [
+							{
+								"system": "http://snomed.info/sct",
+								"code": "108252007",
+								"display": "Laboratory procedure"
+							}
+						]
+					}
+				],
+				"intent": "order",
+				"resourceType": "ServiceRequest",
+				"status": "active"
+			},
+			"fullUrl": "ServiceRequest/1ad5355a-b049-11ee-9c3b-0050568837bb"
+		},
+		{
+			"resource": {
+				"requester": {
+					"reference": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb"
+				},
+				"code": {
+					"text": "A.P. & OBLIQUE VIEW OF HAND"
+				},
+				"authoredOn": "2024-01-04T15:35:48+05:30",
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"id": "1ad53690-b049-11ee-9c3c-0050568837bb",
+				"category": [
+					{
+						"coding": [
+							{
+								"system": "http://snomed.info/sct",
+								"code": "168501001",
+								"display": "Radiology result abnormal"
+							}
+						]
+					}
+				],
+				"intent": "order",
+				"resourceType": "ServiceRequest",
+				"status": "active"
+			},
+			"fullUrl": "ServiceRequest/1ad53690-b049-11ee-9c3c-0050568837bb"
+		},
+		{
+			"resource": {
+				"requester": {
+					"reference": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb"
+				},
+				"code": {
+					"text": "USG B-SCAN"
+				},
+				"authoredOn": "2024-01-04T18:21:24+05:30",
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"id": "1ad53b9a-b049-11ee-9c40-0050568837bb",
+				"category": [
+					{
+						"coding": [
+							{
+								"system": "http://snomed.info/sct",
+								"code": "721964003",
+								"display": "Radiology order"
+							}
+						]
+					}
+				],
+				"intent": "order",
+				"resourceType": "ServiceRequest",
+				"status": "active"
+			},
+			"fullUrl": "ServiceRequest/1ad53b9a-b049-11ee-9c40-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"coding": [
+						{
+							"system": "http://snomed.info/sct",
+							"code": "387264003",
+							"display": "Diazepam"
+						}
+					]
+				},
+				"asserter": {
+					"reference": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb"
+				},
+				"verificationStatus": {
+					"coding": [
+						{
+							"system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+							"code": "confirmed",
+							"display": "Confirmed"
+						}
+					]
+				},
+				"patient": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"id": "1ad5392e-b049-11ee-9c3e-0050568837bb",
+				"clinicalStatus": {
+					"coding": [
+						{
+							"system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+							"code": "active",
+							"display": "Active"
+						}
+					]
+				},
+				"type": "allergy",
+				"category": [
+					"food"
+				],
+				"resourceType": "AllergyIntolerance"
+			},
+			"fullUrl": "AllergyIntolerance/1ad5392e-b049-11ee-9c3e-0050568837bb"
+		},
+		{
+			"resource": {
+				"code": {
+					"coding": [
+						{
+							"system": "http://snomed.info/sct",
+							"code": "387096002",
+							"display": "Dapsone"
+						}
+					]
+				},
+				"asserter": {
+					"reference": "Practitioner/1ad3e902-b049-11ee-9c37-0050568837bb"
+				},
+				"verificationStatus": {
+					"coding": [
+						{
+							"system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+							"code": "confirmed",
+							"display": "Confirmed"
+						}
+					]
+				},
+				"patient": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"id": "1ad53802-b049-11ee-9c3d-0050568837bb",
+				"clinicalStatus": {
+					"coding": [
+						{
+							"system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+							"code": "active",
+							"display": "Active"
+						}
+					]
+				},
+				"type": "allergy",
+				"category": [
+					"food"
+				],
+				"resourceType": "AllergyIntolerance"
+			},
+			"fullUrl": "AllergyIntolerance/1ad53802-b049-11ee-9c3d-0050568837bb"
+		},
+		{
+			"resource": {
+				"identifier": [
+					{
+						"system": "https://ndhm.in",
+						"value": "S100"
+					}
+				],
+				"meta": {
+					"lastUpdated": "2024-01-04T15:36:45+05:30",
+					"profile": [
+						"https://nrces.in/ndhm/fhir/r4/StructureDefinition/Encounter"
+					]
+				},
+				"subject": {
+					"reference": "Patient/1ad3e934-b049-11ee-9c38-0050568837bb"
+				},
+				"id": "1ad3e89e-b049-11ee-9c35-0050568837bb",
+				"class": {
+					"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+					"code": "AMB",
+					"display": "ambulatory"
+				},
+				"resourceType": "Encounter",
+				"status": "finished"
+			},
+			"fullUrl": "Encounter/1ad3e89e-b049-11ee-9c35-0050568837bb"
+		}
+	],
+	"meta": {
+		"lastUpdated": "2024-01-11T11:47:32+05:30",
+		"versionId": "1",
+		"security": [
+			{
+				"system": "http://terminology.hl7.org/CodeSystem/v3-Confidentiality",
+				"code": "V",
+				"display": "very restricted"
+			}
+		],
+		"profile": [
+			"https://nrces.in/ndhm/fhir/r4/StructureDefinition/DocumentBundle"
+		]
+	},
+	"id": "1ad6c4a6-b049-11ee-9c45-0050568837bb",
+	"type": "document",
+	"resourceType": "Bundle",
+	"timestamp": "2024-01-04T15:36:45+05:30"
+}

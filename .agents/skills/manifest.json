@@ -1,0 +1,475 @@
+{
+  "generatedAt": "2026-10-15T15:12:08.579Z",
+  "skills": [
+    {
+      "name": "acestep",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\acestep",
+      "path": ".agents\\skills\\acestep"
+    },
+    {
+      "name": "add-tts-engine",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\voicebox\\.agents\\skills\\add-tts-engine",
+      "path": ".agents\\skills\\add-tts-engine"
+    },
+    {
+      "name": "agents",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\agents",
+      "path": ".agents\\skills\\agents"
+    },
+    {
+      "name": "ai-video-gen",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\ai-video-gen",
+      "path": ".agents\\skills\\ai-video-gen"
+    },
+    {
+      "name": "avatar-video",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\avatar-video",
+      "path": ".agents\\skills\\avatar-video"
+    },
+    {
+      "name": "azure-speech-to-text",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\azure-speech-to-text",
+      "path": ".agents\\skills\\azure-speech-to-text"
+    },
+    {
+      "name": "beautiful-mermaid",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\beautiful-mermaid",
+      "path": ".agents\\skills\\beautiful-mermaid"
+    },
+    {
+      "name": "bfl-api",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\bfl-api",
+      "path": ".agents\\skills\\bfl-api"
+    },
+    {
+      "name": "canvas-procedural-animation",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\canvas-procedural-animation",
+      "path": ".agents\\skills\\canvas-procedural-animation"
+    },
+    {
+      "name": "career-growth",
+      "source": "..\\..\\..\\..\\2026-09-28\\referenced-chatgpt-conversation-this-is-an\\work\\rohith-os\\skills\\career-growth",
+      "path": ".agents\\skills\\career-growth"
+    },
+    {
+      "name": "character-animation-qa",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\character-animation-qa",
+      "path": ".agents\\skills\\character-animation-qa"
+    },
+    {
+      "name": "character-rigging",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\character-rigging",
+      "path": ".agents\\skills\\character-rigging"
+    },
+    {
+      "name": "comfyui",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\comfyui",
+      "path": ".agents\\skills\\comfyui"
+    },
+    {
+      "name": "create-video",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\create-video",
+      "path": ".agents\\skills\\create-video"
+    },
+    {
+      "name": "d3-viz",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\d3-viz",
+      "path": ".agents\\skills\\d3-viz"
+    },
+    {
+      "name": "daily-command-center",
+      "source": "..\\..\\..\\..\\2026-09-28\\referenced-chatgpt-conversation-this-is-an\\work\\rohith-os\\skills\\daily-command-center",
+      "path": ".agents\\skills\\daily-command-center"
+    },
+    {
+      "name": "dashscope",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\dashscope",
+      "path": ".agents\\skills\\dashscope"
+    },
+    {
+      "name": "dev-shipping",
+      "source": "..\\..\\..\\..\\2026-09-28\\referenced-chatgpt-conversation-this-is-an\\work\\rohith-os\\skills\\dev-shipping",
+      "path": ".agents\\skills\\dev-shipping"
+    },
+    {
+      "name": "doubao-tts",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\doubao-tts",
+      "path": ".agents\\skills\\doubao-tts"
+    },
+    {
+      "name": "draft-release-notes",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\voicebox\\.agents\\skills\\draft-release-notes",
+      "path": ".agents\\skills\\draft-release-notes"
+    },
+    {
+      "name": "elevenlabs",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\elevenlabs",
+      "path": ".agents\\skills\\elevenlabs"
+    },
+    {
+      "name": "faceswap",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\faceswap",
+      "path": ".agents\\skills\\faceswap"
+    },
+    {
+      "name": "ffmpeg",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\ffmpeg",
+      "path": ".agents\\skills\\ffmpeg"
+    },
+    {
+      "name": "flux-best-practices",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\flux-best-practices",
+      "path": ".agents\\skills\\flux-best-practices"
+    },
+    {
+      "name": "framer-motion",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\framer-motion",
+      "path": ".agents\\skills\\framer-motion"
+    },
+    {
+      "name": "freelance-pipeline",
+      "source": "..\\..\\..\\..\\2026-09-28\\referenced-chatgpt-conversation-this-is-an\\work\\rohith-os\\skills\\freelance-pipeline",
+      "path": ".agents\\skills\\freelance-pipeline"
+    },
+    {
+      "name": "gemini-omni",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gemini-omni",
+      "path": ".agents\\skills\\gemini-omni"
+    },
+    {
+      "name": "grok-media",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\grok-media",
+      "path": ".agents\\skills\\grok-media"
+    },
+    {
+      "name": "gsap-core",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gsap-core",
+      "path": ".agents\\skills\\gsap-core"
+    },
+    {
+      "name": "gsap-frameworks",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gsap-frameworks",
+      "path": ".agents\\skills\\gsap-frameworks"
+    },
+    {
+      "name": "gsap-performance",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gsap-performance",
+      "path": ".agents\\skills\\gsap-performance"
+    },
+    {
+      "name": "gsap-plugins",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gsap-plugins",
+      "path": ".agents\\skills\\gsap-plugins"
+    },
+    {
+      "name": "gsap-react",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gsap-react",
+      "path": ".agents\\skills\\gsap-react"
+    },
+    {
+      "name": "gsap-scrolltrigger",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gsap-scrolltrigger",
+      "path": ".agents\\skills\\gsap-scrolltrigger"
+    },
+    {
+      "name": "gsap-timeline",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gsap-timeline",
+      "path": ".agents\\skills\\gsap-timeline"
+    },
+    {
+      "name": "gsap-utils",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\gsap-utils",
+      "path": ".agents\\skills\\gsap-utils"
+    },
+    {
+      "name": "heygen",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\heygen",
+      "path": ".agents\\skills\\heygen"
+    },
+    {
+      "name": "hyperframes",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\hyperframes",
+      "path": ".agents\\skills\\hyperframes"
+    },
+    {
+      "name": "hyperframes-animation",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\hyperframes-animation",
+      "path": ".agents\\skills\\hyperframes-animation"
+    },
+    {
+      "name": "hyperframes-cli",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\hyperframes-cli",
+      "path": ".agents\\skills\\hyperframes-cli"
+    },
+    {
+      "name": "hyperframes-core",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\hyperframes-core",
+      "path": ".agents\\skills\\hyperframes-core"
+    },
+    {
+      "name": "hyperframes-creative",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\hyperframes-creative",
+      "path": ".agents\\skills\\hyperframes-creative"
+    },
+    {
+      "name": "hyperframes-media",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\hyperframes-media",
+      "path": ".agents\\skills\\hyperframes-media"
+    },
+    {
+      "name": "hyperframes-registry",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\hyperframes-registry",
+      "path": ".agents\\skills\\hyperframes-registry"
+    },
+    {
+      "name": "kling-official",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\kling-official",
+      "path": ".agents\\skills\\kling-official"
+    },
+    {
+      "name": "lottie-bodymovin",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\lottie-bodymovin",
+      "path": ".agents\\skills\\lottie-bodymovin"
+    },
+    {
+      "name": "ltx2",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\ltx2",
+      "path": ".agents\\skills\\ltx2"
+    },
+    {
+      "name": "lyria",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\lyria",
+      "path": ".agents\\skills\\lyria"
+    },
+    {
+      "name": "manim-composer",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\manim-composer",
+      "path": ".agents\\skills\\manim-composer"
+    },
+    {
+      "name": "manimce-best-practices",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\manimce-best-practices",
+      "path": ".agents\\skills\\manimce-best-practices"
+    },
+    {
+      "name": "manimgl-best-practices",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\manimgl-best-practices",
+      "path": ".agents\\skills\\manimgl-best-practices"
+    },
+    {
+      "name": "media-use",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\media-use",
+      "path": ".agents\\skills\\media-use"
+    },
+    {
+      "name": "motion-graphics",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\motion-graphics",
+      "path": ".agents\\skills\\motion-graphics"
+    },
+    {
+      "name": "music",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\music",
+      "path": ".agents\\skills\\music"
+    },
+    {
+      "name": "music-to-video",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\music-to-video",
+      "path": ".agents\\skills\\music-to-video"
+    },
+    {
+      "name": "n8n-automation",
+      "source": "..\\..\\..\\..\\2026-09-28\\referenced-chatgpt-conversation-this-is-an\\work\\rohith-os\\skills\\n8n-automation",
+      "path": ".agents\\skills\\n8n-automation"
+    },
+    {
+      "name": "playwright-recording",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\playwright-recording",
+      "path": ".agents\\skills\\playwright-recording"
+    },
+    {
+      "name": "pose-library-design",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\pose-library-design",
+      "path": ".agents\\skills\\pose-library-design"
+    },
+    {
+      "name": "release-bump",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\voicebox\\.agents\\skills\\release-bump",
+      "path": ".agents\\skills\\release-bump"
+    },
+    {
+      "name": "remotion",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\remotion",
+      "path": ".agents\\skills\\remotion"
+    },
+    {
+      "name": "remotion-best-practices",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\remotion-best-practices",
+      "path": ".agents\\skills\\remotion-best-practices"
+    },
+    {
+      "name": "remotion-to-hyperframes",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\remotion-to-hyperframes",
+      "path": ".agents\\skills\\remotion-to-hyperframes"
+    },
+    {
+      "name": "research-radar",
+      "source": "..\\..\\..\\..\\2026-09-28\\referenced-chatgpt-conversation-this-is-an\\work\\rohith-os\\skills\\research-radar",
+      "path": ".agents\\skills\\research-radar"
+    },
+    {
+      "name": "seedance-2-0",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\seedance-2-0",
+      "path": ".agents\\skills\\seedance-2-0"
+    },
+    {
+      "name": "setup-api-key",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\setup-api-key",
+      "path": ".agents\\skills\\setup-api-key"
+    },
+    {
+      "name": "sound-effects",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\sound-effects",
+      "path": ".agents\\skills\\sound-effects"
+    },
+    {
+      "name": "speech-to-text",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\speech-to-text",
+      "path": ".agents\\skills\\speech-to-text"
+    },
+    {
+      "name": "svg-character-animation",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\svg-character-animation",
+      "path": ".agents\\skills\\svg-character-animation"
+    },
+    {
+      "name": "synthetic-screen-recording",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\synthetic-screen-recording",
+      "path": ".agents\\skills\\synthetic-screen-recording"
+    },
+    {
+      "name": "tailwind-design-system",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\tailwind-design-system",
+      "path": ".agents\\skills\\tailwind-design-system"
+    },
+    {
+      "name": "text-to-speech",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\text-to-speech",
+      "path": ".agents\\skills\\text-to-speech"
+    },
+    {
+      "name": "threejs-animation",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-animation",
+      "path": ".agents\\skills\\threejs-animation"
+    },
+    {
+      "name": "threejs-fundamentals",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-fundamentals",
+      "path": ".agents\\skills\\threejs-fundamentals"
+    },
+    {
+      "name": "threejs-geometry",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-geometry",
+      "path": ".agents\\skills\\threejs-geometry"
+    },
+    {
+      "name": "threejs-interaction",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-interaction",
+      "path": ".agents\\skills\\threejs-interaction"
+    },
+    {
+      "name": "threejs-lighting",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-lighting",
+      "path": ".agents\\skills\\threejs-lighting"
+    },
+    {
+      "name": "threejs-loaders",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-loaders",
+      "path": ".agents\\skills\\threejs-loaders"
+    },
+    {
+      "name": "threejs-materials",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-materials",
+      "path": ".agents\\skills\\threejs-materials"
+    },
+    {
+      "name": "threejs-postprocessing",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-postprocessing",
+      "path": ".agents\\skills\\threejs-postprocessing"
+    },
+    {
+      "name": "threejs-shaders",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-shaders",
+      "path": ".agents\\skills\\threejs-shaders"
+    },
+    {
+      "name": "threejs-textures",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\threejs-textures",
+      "path": ".agents\\skills\\threejs-textures"
+    },
+    {
+      "name": "triage-prs",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\voicebox\\.agents\\skills\\triage-prs",
+      "path": ".agents\\skills\\triage-prs"
+    },
+    {
+      "name": "vercel-composition-patterns",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\vercel-composition-patterns",
+      "path": ".agents\\skills\\vercel-composition-patterns"
+    },
+    {
+      "name": "vercel-react-best-practices",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\vercel-react-best-practices",
+      "path": ".agents\\skills\\vercel-react-best-practices"
+    },
+    {
+      "name": "video_toolkit",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.claude\\skills\\video_toolkit",
+      "path": ".agents\\skills\\video_toolkit"
+    },
+    {
+      "name": "video-download",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\video-download",
+      "path": ".agents\\skills\\video-download"
+    },
+    {
+      "name": "video-edit",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\video-edit",
+      "path": ".agents\\skills\\video-edit"
+    },
+    {
+      "name": "video-toolkit",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\video-toolkit",
+      "path": ".agents\\skills\\video-toolkit"
+    },
+    {
+      "name": "video-translate",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\video-translate",
+      "path": ".agents\\skills\\video-translate"
+    },
+    {
+      "name": "video-understand",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\video-understand",
+      "path": ".agents\\skills\\video-understand"
+    },
+    {
+      "name": "visual-style",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\visual-style",
+      "path": ".agents\\skills\\visual-style"
+    },
+    {
+      "name": "web-design-guidelines",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\web-design-guidelines",
+      "path": ".agents\\skills\\web-design-guidelines"
+    },
+    {
+      "name": "website-to-video",
+      "source": "..\\..\\..\\..\\2026-07-24\\realtime-voice-chat\\OpenMontage\\.agents\\skills\\website-to-video",
+      "path": ".agents\\skills\\website-to-video"
+    },
+    {
+      "name": "weekly-review",
+      "source": "..\\..\\..\\..\\2026-09-28\\referenced-chatgpt-conversation-this-is-an\\work\\rohith-os\\skills\\weekly-review",
+      "path": ".agents\\skills\\weekly-review"
+    }
+  ]
+}

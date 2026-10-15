@@ -1,0 +1,27 @@
+{
+  "AdvancedEventSelectors": [
+    {
+      "Name": "ClinicalKnowledgeBaseQueries",
+      "FieldSelectors": [
+        {
+          "Field": "eventCategory",
+          "Equals": [
+            "Data"
+          ]
+        },
+        {
+          "Field": "resources.type",
+          "Equals": [
+            "AWS::Bedrock::KnowledgeBase"
+          ]
+        },
+        {
+          "Field": "resources.ARN",
+          "Equals": [
+            "${BEDROCK_KNOWLEDGE_BASE_ARN}"
+          ]
+        }
+      ]
+    }
+  ]
+}

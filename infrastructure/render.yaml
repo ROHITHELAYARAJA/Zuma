@@ -1,0 +1,130 @@
+services:
+  - type: web
+    name: clinical-hospital-a
+    runtime: node
+    plan: starter
+    autoDeploy: false
+    buildCommand: npm ci --include=dev
+    startCommand: npx tsx hospitals/index.ts
+    healthCheckPath: /health
+    disk:
+      name: hospital-a-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: HOSPITAL_ID
+        value: A
+      - key: HOSPITAL_DB_PATH
+        value: /var/data/hospital-a.sqlite
+      - key: HOSPITAL_API_KEY
+        generateValue: true
+  - type: web
+    name: clinical-hospital-b
+    runtime: node
+    plan: starter
+    autoDeploy: false
+    buildCommand: npm ci --include=dev
+    startCommand: npx tsx hospitals/index.ts
+    healthCheckPath: /health
+    disk:
+      name: hospital-b-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: HOSPITAL_ID
+        value: B
+      - key: HOSPITAL_DB_PATH
+        value: /var/data/hospital-b.sqlite
+      - key: HOSPITAL_API_KEY
+        generateValue: true
+  - type: web
+    name: clinical-workspace-api
+    runtime: node
+    plan: starter
+    autoDeploy: false
+    buildCommand: npm ci --include=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: clinical-api-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DEMO_MODE
+        value: "true"
+      - key: ALLOW_PUBLIC_DEMO
+        value: "true"
+      - key: DB_PATH
+        value: /var/data/clinical.sqlite
+      - key: APP_ORIGINS
+        sync: false
+      - key: AUTH_PROVIDER
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: HOSPITAL_DATA_PROVIDER
+        value: api
+      - key: HOSPITAL_A_API_URL
+        sync: false
+      - key: HOSPITAL_A_API_KEY
+        fromService:
+          type: web
+          name: clinical-hospital-a
+          envVarKey: HOSPITAL_API_KEY
+      - key: HOSPITAL_B_API_URL
+        sync: false
+      - key: HOSPITAL_B_API_KEY
+        fromService:
+          type: web
+          name: clinical-hospital-b
+          envVarKey: HOSPITAL_API_KEY
+      - key: AI_PROVIDER
+        value: bedrock
+      - key: RAG_PROVIDER
+        value: bedrock-kb
+      - key: AWS_CLOUD_ENABLED
+        value: "true"
+      - key: AWS_REGION
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: BEDROCK_TEXT_MODEL_ID
+        sync: false
+      - key: BEDROCK_KNOWLEDGE_BASE_ID
+        sync: false
+      - key: BEDROCK_DATA_SOURCE_ID
+        sync: false
+      - key: BEDROCK_KB_MODE
+        value: managed
+      - key: REPORT_STORAGE_PROVIDER
+        value: s3
+      - key: S3_REPORT_BUCKET
+        sync: false
+      - key: S3_KMS_KEY_ID
+        sync: false
+      - key: S3_EVIDENCE_PREFIX
+        value: evidence/

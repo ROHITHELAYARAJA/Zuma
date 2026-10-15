@@ -1,0 +1,753 @@
+openapi: 3.0.3
+info:
+  description: This is a set of interfaces based on the OpenAPI 3.0 specification
+    for a wrapper client
+  title: Swagger HIU Facade - OpenAPI 3.0
+  version: 1.0.0
+servers:
+- url: http://localhost:8082/v1
+paths:
+  /consent-init:
+    post:
+      description: Initiates consent request
+      operationId: initConsent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/initConsent_request'
+        description: Request body for initiate consent request
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacadeResponse'
+          description: OK
+        "202":
+          description: Request accepted
+        "400":
+          description: Invalid request body supplied
+        "404":
+          description: Address not found
+        "422":
+          description: Validation exception
+      summary: Initiates consent request
+      tags:
+      - consent
+      x-content-type: application/json
+      x-accepts: application/json
+  /consent-status/{requestId}:
+    get:
+      parameters:
+      - description: Request Id of the consent request.
+        explode: false
+        in: path
+        name: requestId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentStatusResponse'
+          description: OK
+        "400":
+          description: Invalid request body supplied
+        "404":
+          description: Address not found
+        "422":
+          description: Validation exception
+      summary: Get status of Consent request.
+      tags:
+      - consent
+      x-accepts: application/json
+  /health-information/fetch-records:
+    post:
+      description: Submits a request to fetch health information
+      operationId: fetchHealthInformation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HIUClientHealthInformationRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacadeResponse'
+          description: OK
+        "202":
+          description: Request Accepted
+        "400":
+          description: Invalid request body supplied
+        "404":
+          description: Address not found
+        "422":
+          description: Validation exception
+      summary: Submits a request to fetch health information
+      tags:
+      - data-transfer
+      x-content-type: application/json
+      x-accepts: application/json
+  /health-information/status/{requestId}:
+    get:
+      parameters:
+      - description: Request Id of the health information request.
+        explode: false
+        in: path
+        name: requestId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthInformationResponse'
+          description: OK
+        "400":
+          description: Invalid request body supplied
+        "404":
+          description: Address not found
+        "422":
+          description: Validation exception
+      summary: Get status of Health Information request.
+      tags:
+      - data-transfer
+      x-accepts: application/json
+components:
+  schemas:
+    ConsentRequest:
+      example:
+        requester:
+          identifier:
+            system: https://www.mciindia.org
+            type: REGNO
+            value: MH1001
+          name: name
+        purpose:
+          code: code
+          text: text
+          refUri: refUri
+        hiu:
+          id: id
+        hiTypes:
+        - OPConsultation
+        - Prescription
+        patient:
+          id: id
+        permission:
+          dateRange:
+            from: 2021-09-25T12:52:34.925
+            to: 2023-11-15T12:52:34.925
+          accessMode: VIEW
+          dataEraseAt: 2024-03-26T10:25:26.274Z
+          frequency:
+            repeats: 6
+            unit: HOUR
+            value: 0
+        careContexts:
+        - patientReference: patientReference
+          careContextReference: careContextReference
+        - patientReference: patientReference
+          careContextReference: careContextReference
+        hip:
+          id: id
+      properties:
+        purpose:
+          $ref: '#/components/schemas/Purpose'
+        patient:
+          $ref: '#/components/schemas/IdRequest'
+        hip:
+          $ref: '#/components/schemas/IdRequest'
+        careContexts:
+          items:
+            $ref: '#/components/schemas/ConsentCareContext'
+          type: array
+        hiu:
+          $ref: '#/components/schemas/IdRequest'
+        requester:
+          $ref: '#/components/schemas/ConsentRequester'
+        hiTypes:
+          example:
+          - OPConsultation
+          - Prescription
+          items:
+            $ref: '#/components/schemas/HiTypeEnum'
+          type: array
+        permission:
+          $ref: '#/components/schemas/Permission'
+      required:
+      - hiTypes
+      - hiu
+      - patient
+      - permission
+      - purpose
+      - requester
+      type: object
+    Purpose:
+      example:
+        code: code
+        text: text
+        refUri: refUri
+      properties:
+        text:
+          type: string
+        code:
+          type: string
+        refUri:
+          type: string
+      type: object
+    IdRequest:
+      example:
+        id: id
+      properties:
+        id:
+          type: string
+      type: object
+    ConsentCareContext:
+      example:
+        patientReference: patientReference
+        careContextReference: careContextReference
+      properties:
+        patientReference:
+          type: string
+        careContextReference:
+          type: string
+      type: object
+    ConsentRequester:
+      example:
+        identifier:
+          system: https://www.mciindia.org
+          type: REGNO
+          value: MH1001
+        name: name
+      properties:
+        name:
+          type: string
+        identifier:
+          $ref: '#/components/schemas/ConsentRequestIdentifier'
+      type: object
+    ConsentRequestIdentifier:
+      example:
+        system: https://www.mciindia.org
+        type: REGNO
+        value: MH1001
+      properties:
+        type:
+          example: REGNO
+          type: string
+        value:
+          example: MH1001
+          type: string
+        system:
+          example: https://www.mciindia.org
+          type: string
+      type: object
+    Frequency:
+      example:
+        repeats: 6
+        unit: HOUR
+        value: 0
+      properties:
+        unit:
+          enum:
+          - HOUR
+          - WEEK
+          - DAY
+          - MONTH
+          - YEAR
+          type: string
+        value:
+          type: integer
+        repeats:
+          type: integer
+      type: object
+    FacadeResponse:
+      example:
+        code: 0
+        clientRequestId: clientRequestId
+        message: message
+        error:
+          code: 6
+          message: message
+        httpStatusCode: httpStatusCode
+      properties:
+        clientRequestId:
+          type: string
+        code:
+          type: integer
+        httpStatusCode:
+          type: string
+        message:
+          type: string
+        error:
+          $ref: '#/components/schemas/ErrorResponse'
+      type: object
+    ErrorResponse:
+      example:
+        code: 6
+        message: message
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      type: object
+    ConsentStatusResponse:
+      example:
+        error: error
+        consent:
+          initConsentRequest:
+            requestId: requestId
+            consent:
+              requester:
+                identifier:
+                  system: https://www.mciindia.org
+                  type: REGNO
+                  value: MH1001
+                name: name
+              purpose:
+                code: code
+                text: text
+                refUri: refUri
+              hiu:
+                id: id
+              hiTypes:
+              - OPConsultation
+              - Prescription
+              patient:
+                id: id
+              permission:
+                dateRange:
+                  from: 2021-09-25T12:52:34.925
+                  to: 2023-11-15T12:52:34.925
+                accessMode: VIEW
+                dataEraseAt: 2024-03-26T10:25:26.274Z
+                frequency:
+                  repeats: 6
+                  unit: HOUR
+                  value: 0
+              careContexts:
+              - patientReference: patientReference
+                careContextReference: careContextReference
+              - patientReference: patientReference
+                careContextReference: careContextReference
+              hip:
+                id: id
+            timestamp: timestamp
+          consentDetails:
+            dateRange:
+              from: 2021-09-25T12:52:34.925
+              to: 2023-11-15T12:52:34.925
+            hiTypes:
+            - hiTypes
+            - hiTypes
+            grantedOn: grantedOn
+            consent:
+            - status: status
+              consentArtefacts:
+              - hipId: hipId
+                lastUpdated: lastUpdated
+                careContextReference:
+                - careContextReference
+                - careContextReference
+                id: id
+              - hipId: hipId
+                lastUpdated: lastUpdated
+                careContextReference:
+                - careContextReference
+                - careContextReference
+                id: id
+            - status: status
+              consentArtefacts:
+              - hipId: hipId
+                lastUpdated: lastUpdated
+                careContextReference:
+                - careContextReference
+                - careContextReference
+                id: id
+              - hipId: hipId
+                lastUpdated: lastUpdated
+                careContextReference:
+                - careContextReference
+                - careContextReference
+                id: id
+            dataEraseAt: dataEraseAt
+          error: error
+          status: status
+          httpStatusCode: httpStatusCode
+        status: status
+        httpStatusCode: httpStatusCode
+      properties:
+        status:
+          type: string
+        error:
+          type: string
+        httpStatusCode:
+          type: string
+        consent:
+          $ref: '#/components/schemas/ConsentStatus'
+      type: object
+    ConsentStatus:
+      example:
+        initConsentRequest:
+          requestId: requestId
+          consent:
+            requester:
+              identifier:
+                system: https://www.mciindia.org
+                type: REGNO
+                value: MH1001
+              name: name
+            purpose:
+              code: code
+              text: text
+              refUri: refUri
+            hiu:
+              id: id
+            hiTypes:
+            - OPConsultation
+            - Prescription
+            patient:
+              id: id
+            permission:
+              dateRange:
+                from: 2021-09-25T12:52:34.925
+                to: 2023-11-15T12:52:34.925
+              accessMode: VIEW
+              dataEraseAt: 2024-03-26T10:25:26.274Z
+              frequency:
+                repeats: 6
+                unit: HOUR
+                value: 0
+            careContexts:
+            - patientReference: patientReference
+              careContextReference: careContextReference
+            - patientReference: patientReference
+              careContextReference: careContextReference
+            hip:
+              id: id
+          timestamp: timestamp
+        consentDetails:
+          dateRange:
+            from: 2021-09-25T12:52:34.925
+            to: 2023-11-15T12:52:34.925
+          hiTypes:
+          - hiTypes
+          - hiTypes
+          grantedOn: grantedOn
+          consent:
+          - status: status
+            consentArtefacts:
+            - hipId: hipId
+              lastUpdated: lastUpdated
+              careContextReference:
+              - careContextReference
+              - careContextReference
+              id: id
+            - hipId: hipId
+              lastUpdated: lastUpdated
+              careContextReference:
+              - careContextReference
+              - careContextReference
+              id: id
+          - status: status
+            consentArtefacts:
+            - hipId: hipId
+              lastUpdated: lastUpdated
+              careContextReference:
+              - careContextReference
+              - careContextReference
+              id: id
+            - hipId: hipId
+              lastUpdated: lastUpdated
+              careContextReference:
+              - careContextReference
+              - careContextReference
+              id: id
+          dataEraseAt: dataEraseAt
+        error: error
+        status: status
+        httpStatusCode: httpStatusCode
+      properties:
+        status:
+          type: string
+        error:
+          type: string
+        httpStatusCode:
+          type: string
+        initConsentRequest:
+          $ref: '#/components/schemas/ConsentStatus_initConsentRequest'
+        consentDetails:
+          $ref: '#/components/schemas/ConsentStatus_consentDetails'
+      type: object
+    Permission:
+      example:
+        dateRange:
+          from: 2021-09-25T12:52:34.925
+          to: 2023-11-15T12:52:34.925
+        accessMode: VIEW
+        dataEraseAt: 2024-03-26T10:25:26.274Z
+        frequency:
+          repeats: 6
+          unit: HOUR
+          value: 0
+      properties:
+        accessMode:
+          enum:
+          - VIEW
+          - STORE
+          - QUERY
+          - STREAM
+          type: string
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        dataEraseAt:
+          description: Data related to this consent to be deleted on this date
+          example: 2024-03-26T10:25:26.274Z
+          type: string
+        frequency:
+          $ref: '#/components/schemas/Frequency'
+      type: object
+    DateRange:
+      example:
+        from: 2021-09-25T12:52:34.925
+        to: 2023-11-15T12:52:34.925
+      properties:
+        from:
+          example: 2021-09-25T12:52:34.925
+          type: string
+        to:
+          example: 2023-11-15T12:52:34.925
+          type: string
+      type: object
+    HIUClientHealthInformationRequest:
+      example:
+        consentId: ff219ebf-1959-4514-9d28-839b677d6fc6
+        requestId: a1s2c932-2f70-3ds3-a3b5-2sfd46b12a18d
+      properties:
+        requestId:
+          example: a1s2c932-2f70-3ds3-a3b5-2sfd46b12a18d
+          type: string
+        consentId:
+          description: The id of the consent which has been granted
+          example: ff219ebf-1959-4514-9d28-839b677d6fc6
+          type: string
+      required:
+      - consentId
+      - requestId
+      type: object
+    HealthInformationResponse:
+      example:
+        decryptedHealthInformationEntries:
+        - bundleContent: bundleContent
+          careContextReference: careContextReference
+        - bundleContent: bundleContent
+          careContextReference: careContextReference
+        error: error
+        status: status
+        httpStatusCode: httpStatusCode
+      properties:
+        status:
+          type: string
+        error:
+          type: string
+        httpStatusCode:
+          type: string
+        decryptedHealthInformationEntries:
+          items:
+            $ref: '#/components/schemas/HealthInformationBundle'
+          type: array
+      type: object
+    HealthInformationBundle:
+      example:
+        bundleContent: bundleContent
+        careContextReference: careContextReference
+      properties:
+        careContextReference:
+          type: string
+        bundleContent:
+          type: string
+      type: object
+    HiTypeEnum:
+      enum:
+      - OPConsultation
+      - Prescription
+      - DischargeSummary
+      - DiagnosticReport
+      - ImmunizationRecord
+      - HealthDocumentRecord
+      - WellnessRecord
+      type: string
+    initConsent_request:
+      properties:
+        requestId:
+          description: "a nonce, unique for each HTTP request."
+          example: 499a5a4a-7dda-4f20-9b67-e24589627061
+          type: string
+        timestamp:
+          example: 2024-02-13T20:18:35.094329Z
+          type: string
+        consent:
+          $ref: '#/components/schemas/ConsentRequest'
+      required:
+      - requestId
+      - timestamp
+      type: object
+    ConsentStatus_initConsentRequest:
+      example:
+        requestId: requestId
+        consent:
+          requester:
+            identifier:
+              system: https://www.mciindia.org
+              type: REGNO
+              value: MH1001
+            name: name
+          purpose:
+            code: code
+            text: text
+            refUri: refUri
+          hiu:
+            id: id
+          hiTypes:
+          - OPConsultation
+          - Prescription
+          patient:
+            id: id
+          permission:
+            dateRange:
+              from: 2021-09-25T12:52:34.925
+              to: 2023-11-15T12:52:34.925
+            accessMode: VIEW
+            dataEraseAt: 2024-03-26T10:25:26.274Z
+            frequency:
+              repeats: 6
+              unit: HOUR
+              value: 0
+          careContexts:
+          - patientReference: patientReference
+            careContextReference: careContextReference
+          - patientReference: patientReference
+            careContextReference: careContextReference
+          hip:
+            id: id
+        timestamp: timestamp
+      properties:
+        requestId:
+          type: string
+        timestamp:
+          type: string
+        consent:
+          $ref: '#/components/schemas/ConsentRequest'
+      type: object
+    ConsentStatus_consentDetails_consent_inner_consentArtefacts_inner:
+      example:
+        hipId: hipId
+        lastUpdated: lastUpdated
+        careContextReference:
+        - careContextReference
+        - careContextReference
+        id: id
+      properties:
+        id:
+          type: string
+        lastUpdated:
+          type: string
+        hipId:
+          type: string
+        careContextReference:
+          items:
+            type: string
+          type: array
+      type: object
+    ConsentStatus_consentDetails_consent_inner:
+      example:
+        status: status
+        consentArtefacts:
+        - hipId: hipId
+          lastUpdated: lastUpdated
+          careContextReference:
+          - careContextReference
+          - careContextReference
+          id: id
+        - hipId: hipId
+          lastUpdated: lastUpdated
+          careContextReference:
+          - careContextReference
+          - careContextReference
+          id: id
+      properties:
+        status:
+          type: string
+        consentArtefacts:
+          items:
+            $ref: '#/components/schemas/ConsentStatus_consentDetails_consent_inner_consentArtefacts_inner'
+          type: array
+      type: object
+    ConsentStatus_consentDetails:
+      example:
+        dateRange:
+          from: 2021-09-25T12:52:34.925
+          to: 2023-11-15T12:52:34.925
+        hiTypes:
+        - hiTypes
+        - hiTypes
+        grantedOn: grantedOn
+        consent:
+        - status: status
+          consentArtefacts:
+          - hipId: hipId
+            lastUpdated: lastUpdated
+            careContextReference:
+            - careContextReference
+            - careContextReference
+            id: id
+          - hipId: hipId
+            lastUpdated: lastUpdated
+            careContextReference:
+            - careContextReference
+            - careContextReference
+            id: id
+        - status: status
+          consentArtefacts:
+          - hipId: hipId
+            lastUpdated: lastUpdated
+            careContextReference:
+            - careContextReference
+            - careContextReference
+            id: id
+          - hipId: hipId
+            lastUpdated: lastUpdated
+            careContextReference:
+            - careContextReference
+            - careContextReference
+            id: id
+        dataEraseAt: dataEraseAt
+      properties:
+        grantedOn:
+          type: string
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        dataEraseAt:
+          type: string
+        hiTypes:
+          items:
+            type: string
+          type: array
+        consent:
+          items:
+            $ref: '#/components/schemas/ConsentStatus_consentDetails_consent_inner'
+          type: array
+      type: object
+

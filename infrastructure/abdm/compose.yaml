@@ -1,0 +1,58 @@
+name: clinical-abdm-local
+services:
+  mongodb:
+    image: mongo:7.0
+    volumes:
+      - abdm-mongo:/data/db
+    networks: [abdm]
+  gateway:
+    build:
+      context: ../../vendor/ABDM-wrapper/mock-gateway
+    ports: ["127.0.0.1:8090:8090"]
+    networks: [abdm]
+  hospital-a:
+    build:
+      context: ../../vendor/ABDM-wrapper/sample-hip
+      dockerfile: ../../../infrastructure/abdm/Hospital.Dockerfile
+    environment:
+      SERVER_PORT: "8081"
+      FILEPATH: /fixtures/TestBundle.json
+    volumes:
+      - ../../vendor/ABDM-wrapper/sample-hip/src/main/resources:/fixtures:ro
+    ports: ["127.0.0.1:8081:8081"]
+    networks: [abdm]
+  hospital-b:
+    build:
+      context: ../../vendor/ABDM-wrapper/sample-hip
+      dockerfile: ../../../infrastructure/abdm/Hospital.Dockerfile
+    environment:
+      SERVER_PORT: "8081"
+      FILEPATH: /fixtures/OP_Consultation_fhir_bundle.json
+    volumes:
+      - ../../vendor/ABDM-wrapper/sample-hip/src/main/resources:/fixtures:ro
+    ports: ["127.0.0.1:8084:8081"]
+    networks: [abdm]
+  abdm-wrapper:
+    build:
+      context: ../../vendor/ABDM-wrapper
+      dockerfile: ../../infrastructure/abdm/Wrapper.Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: v1
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_DATABASE: clinical_abdm_mock
+      GATEWAYBASEURL: http://gateway:8090
+      SANDBOXBASEURL: http://gateway:8090
+      HIPBASEURL: http://hospital-a:8081
+      DATAPUSHURL: http://abdm-wrapper:8082/v1/transfer/
+      CLIENTID: local-mock-client
+      CLIENTSECRET: local-mock-secret
+      LOGCURL: "false"
+      LOGGING_LEVEL_ROOT: WARN
+    ports: ["127.0.0.1:8082:8082"]
+    depends_on: [mongodb,gateway,hospital-a,hospital-b]
+    networks: [abdm]
+volumes:
+  abdm-mongo:
+networks:
+  abdm:
+    driver: bridge

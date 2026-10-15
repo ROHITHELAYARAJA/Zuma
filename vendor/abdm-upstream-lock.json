@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/NHA-ABDM/ABDM-wrapper",
+  "commit": "bcc69513daddd18971a819a7afa44ec2b0ccf979",
+  "license": "Apache-2.0",
+  "localChanges": [
+    "Dockerfile",
+    "sample-hip/Dockerfile",
+    "mock-gateway/src/main/java/com/nha/abdm/gateway/GatewayController.java"
+  ],
+  "reason": "Container builds and configurable wrapper callback URL for private hosting."
+}

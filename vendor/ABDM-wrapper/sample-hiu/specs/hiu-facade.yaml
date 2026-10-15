@@ -1,0 +1,355 @@
+openapi: 3.0.3
+info:
+  title: Swagger HIU Facade - OpenAPI 3.0
+  description: |-
+    This is a set of interfaces based on the OpenAPI 3.0 specification for a wrapper client
+  version: 1.0.0
+servers:
+  - url: http://localhost:8082/v1
+paths:
+  /consent-init:
+    post:
+      tags:
+        - consent
+      summary: Initiates consent request
+      description: Initiates consent request
+      operationId: initConsent
+      requestBody:
+        description: Request body for initiate consent request
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requestId:
+                  type: string
+                  example: 499a5a4a-7dda-4f20-9b67-e24589627061
+                  description: a nonce, unique for each HTTP request.
+                timestamp:
+                  type: string
+                  example: 2024-02-13T20:18:35.094329Z
+                consent:
+                  $ref: '#/components/schemas/ConsentRequest'
+              required:
+                - requestId
+                - timestamp
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacadeResponse'
+        '202':
+          description: Request accepted
+        '400':
+          description: Invalid request body supplied
+        '404':
+          description: Address not found
+        '422':
+          description: Validation exception
+  /consent-status/{requestId}:
+    get:
+      tags:
+        - consent
+      summary: Get status of Consent request.
+      parameters:
+        - in: path
+          name: requestId
+          schema:
+            type: string
+          required: true
+          description: Request Id of the consent request.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentStatusResponse'
+        '400':
+          description: Invalid request body supplied
+        '404':
+          description: Address not found
+        '422':
+          description: Validation exception
+  /health-information/fetch-records:
+    post:
+      tags:
+        - data-transfer
+      summary: Submits a request to fetch health information
+      description: Submits a request to fetch health information
+      operationId: fetchHealthInformation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HIUClientHealthInformationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacadeResponse'
+        '202':
+          description: Request Accepted
+        '400':
+          description: Invalid request body supplied
+        '404':
+          description: Address not found
+        '422':
+          description: Validation exception
+  /health-information/status/{requestId}:
+    get:
+      tags:
+        - data-transfer
+      summary: Get status of Health Information request.
+      parameters:
+        - in: path
+          name: requestId
+          schema:
+            type: string
+          required: true
+          description: Request Id of the health information request.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthInformationResponse'
+        '400':
+          description: Invalid request body supplied
+        '404':
+          description: Address not found
+        '422':
+          description: Validation exception
+components:
+  schemas:
+    ConsentRequest:
+      type: object
+      properties:
+        purpose:
+          $ref: '#/components/schemas/Purpose'
+        patient:
+          $ref: '#/components/schemas/IdRequest'
+        hip:
+          $ref: '#/components/schemas/IdRequest'
+        careContexts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentCareContext'
+        hiu:
+          $ref: '#/components/schemas/IdRequest'
+        requester:
+          $ref: '#/components/schemas/ConsentRequester'
+        hiTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/HiTypeEnum'
+          example: [OPConsultation, Prescription]
+        permission:
+          $ref: '#/components/schemas/Permission'
+      required:
+        - purpose
+        - patient
+        - hiu
+        - requester
+        - hiTypes
+        - permission
+    Purpose:
+      type: object
+      properties:
+        text:
+          type: string
+        code:
+          type: string
+        refUri:
+          type: string
+    IdRequest:
+      type: object
+      properties:
+        id:
+          type: string
+    ConsentCareContext:
+      type: object
+      properties:
+        patientReference:
+          type: string
+        careContextReference:
+          type: string
+    ConsentRequester:
+      type: object
+      properties:
+        name:
+          type: string
+        identifier:
+          $ref: '#/components/schemas/ConsentRequestIdentifier'
+    ConsentRequestIdentifier:
+      type: object
+      properties:
+        type:
+          type: string
+          example: REGNO
+        value:
+          type: string
+          example: MH1001
+        system:
+          type: string
+          example: https://www.mciindia.org
+    Frequency:
+      type: object
+      properties:
+        unit:
+          type: string
+          enum: [HOUR, WEEK, DAY, MONTH, YEAR]
+        value:
+          type: integer
+        repeats:
+          type: integer
+    FacadeResponse:
+      type: object
+      properties:
+        clientRequestId:
+          type: string
+        code:
+          type: integer
+        httpStatusCode:
+          type: string
+        message:
+          type: string
+        error:
+          $ref: '#/components/schemas/ErrorResponse'
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    ConsentStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        error:
+          type: string
+        httpStatusCode:
+          type: string
+        consent:
+          $ref: '#/components/schemas/ConsentStatus'
+    ConsentStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        error:
+          type: string
+        httpStatusCode:
+          type: string
+        initConsentRequest:
+          type: object
+          properties:
+            requestId:
+              type: string
+            timestamp:
+              type: string
+            consent:
+              $ref: '#/components/schemas/ConsentRequest'
+        consentDetails:
+          type: object
+          properties:
+            grantedOn:
+              type: string
+            dateRange:
+              $ref: '#/components/schemas/DateRange'
+            dataEraseAt:
+              type: string
+            hiTypes:
+              type: array
+              items:
+                type: string
+            consent:
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  consentArtefacts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        lastUpdated:
+                          type: string
+                        hipId:
+                          type: string
+                        careContextReference:
+                          type: array
+                          items:
+                            type: string
+    Permission:
+      type: object
+      properties:
+        accessMode:
+          type: string
+          enum: [VIEW, STORE, QUERY, STREAM]
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        dataEraseAt:
+          type: string
+          description: Data related to this consent to be deleted on this date
+          example: 2024-03-26T10:25:26.274Z
+        frequency:
+          $ref: '#/components/schemas/Frequency'
+    DateRange:
+      type: object
+      properties:
+        from:
+          type: string
+          example: 2021-09-25T12:52:34.925
+        to:
+          type: string
+          example: 2023-11-15T12:52:34.925
+    HIUClientHealthInformationRequest:
+      type: object
+      properties:
+        requestId:
+          type: string
+          example: a1s2c932-2f70-3ds3-a3b5-2sfd46b12a18d
+        consentId:
+          type: string
+          example: ff219ebf-1959-4514-9d28-839b677d6fc6
+          description: The id of the consent which has been granted
+      required:
+        - requestId
+        - consentId
+    HealthInformationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        error:
+          type: string
+        httpStatusCode:
+          type: string
+        decryptedHealthInformationEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/HealthInformationBundle'
+    HealthInformationBundle:
+      type: object
+      properties:
+        careContextReference:
+          type: string
+        bundleContent:
+          type: string
+    HiTypeEnum:
+      type: string
+      enum: [OPConsultation, Prescription, DischargeSummary, DiagnosticReport, ImmunizationRecord, HealthDocumentRecord, WellnessRecord]

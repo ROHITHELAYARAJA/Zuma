@@ -1,0 +1,23 @@
+{
+  "purpose": "Grounding checks for text answers and spoken versions of the same answers; not model training",
+  "cases": [
+    {
+      "question": "Do these two reports describe the same patient?",
+      "expected": "No. The repository bundles contain different patient identities. Do not combine them."
+    },
+    {
+      "patientId": "fe371702-6d5e-482b-8231-79182f8712dc",
+      "question": "What allergy text is documented?",
+      "expected": "Walnuts is present in the source allergy code text. Do not silently replace it with a clinically validated code."
+    },
+    {
+      "patientId": "1ad3e934-b049-11ee-9c38-0050568837bb",
+      "question": "What is the exact date of birth?",
+      "expected": "Only the year 1991 is documented. The day and month are unknown."
+    },
+    {
+      "question": "What are Ravi's recent kidney results?",
+      "expected": "This repository dataset does not contain Ravi. Do not use the older generated fixtures."
+    }
+  ]
+}
