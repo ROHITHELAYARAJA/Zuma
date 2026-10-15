@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 import type { StateSession, StoredSession } from "./state-store";
-import type { AuthIdentity } from "./auth";
+import { authProvider, supabaseAdmin, type AuthIdentity } from "./auth";
 import { ClinicalError } from "./clinical/engine";
 import dataset from "../data/abdm/dataset.json";
 
@@ -47,7 +47,16 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
   const view = (scope: Awaited<ReturnType<typeof load>>) => ({ reportId: scope.report.reportId, patientId: scope.report.patientId, name: scope.report.name, birthDate: scope.report.birthDate, hospitalId: scope.report.hospitalId, clinicalDate: scope.report.clinicalDate, sourceUrl: scope.report.source, sha256: scope.report.sha256, sourceVersion: scope.sourceVersion, consent: scope.state.consent, allowed: scope.allowed, approval: scope.allowed && scope.state.approved?.sourceVersion === scope.sourceVersion ? scope.state.approved : null, audit: scope.state.audit, bundle: scope.allowed ? scope.report.bundle : null, findings: [...qualityFindings(scope.report), { title: "Repository terminology requires review", detail: "Source coding has not been independently validated. Original values are preserved; no silent correction is performed." }, { title: "Separate patient identities", detail: "The two repository bundles describe different patients. They must not be merged or compared as visits for one patient." }, ...(String(scope.report.birthDate).length < 10 ? [{ title: "Incomplete birth date", detail: "Only the year is documented. Exact date and age are not inferred." }] : [])], notice: "Repository demonstration only. Permission grant is simulated for this hackathon. Source facts require clinician review; full HL7/ABDM validation remains required." });
   router.get("/dataset", async c => {
     await hooks.getSession(c);
-    return c.json({ reports: dataset.reports.map(({ bundle, ...r }) => r), notice: dataset.notice });
+    const query = (c.req.query("q") ?? "").trim().toLocaleLowerCase();
+    if (query.length > 100) throw new ClinicalError(400, "INVALID_SEARCH", "Use at most 100 characters for patient search.");
+    let reports = dataset.reports.map(({ bundle, ...r }) => r);
+    if (authProvider() === "supabase") {
+      const { data, error } = await supabaseAdmin().from("abdm_repository_reports").select("report_id,source_patient_id,patient_name,hospital_id,sha256").limit(100);
+      if (error) throw new ClinicalError(503, "PATIENT_DIRECTORY_UNAVAILABLE", "The hospital patient directory is unavailable.");
+      reports = reports.filter(r => data.some(row => row.report_id === r.reportId && row.source_patient_id === r.patientId && row.hospital_id === r.hospitalId && row.sha256 === r.sha256 && row.patient_name === r.name));
+    }
+    reports = reports.filter(r => !query || [r.name, r.patientId, r.reportId].some(value => value.toLocaleLowerCase().includes(query)));
+    return c.json({ reports, notice: dataset.notice, directory: authProvider() === "supabase" ? "supabase" : "repository", search: "Patient identity search uses verified directory fields. Clinical questions use permission-scoped AWS knowledge retrieval." });
   });
   router.get("/reports/:id/workspace", async c => { const scope = await load(c); await hooks.persist(scope.session); return c.json(view(scope)); });
   router.post("/reports/:id/consent/:action", async c => {
