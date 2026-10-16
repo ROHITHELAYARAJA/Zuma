@@ -16,7 +16,7 @@ type AbdmData = StoredSession & { abdm?: Record<string, Review> };
 type Answer = { answer: string; citations: { id: string; recordId: string; title: string; hospital: string; date: string; quote: string; sourceUrl: string }[]; sourceVersion: string; mode: string; warning: string; audioBase64?: string; audioContentType?: string; transcript?: string };
 const escape = (s: string) => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Session>; persist: (s: Session) => Promise<void> }) {
+export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Session>; persist: (s: Session) => Promise<void>; onEvidenceVerified?: () => void }) {
   const router = new Hono();
   const load = async (c: Context) => {
     const session = await hooks.getSession(c);
@@ -117,6 +117,7 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
     const fresh = await load(c); requireAccess(fresh);
     if (fresh.sourceVersion !== scope.sourceVersion || result.sourceVersion !== scope.sourceVersion) throw new ClinicalError(409, "ACCESS_CHANGED", "Records or permission changed during generation. No answer was released.");
     if (typeof result.answer !== "string" || !Array.isArray(result.citations) || result.citations.some(citation => !citation.id.startsWith(scope.report.reportId + ":") || citation.sourceUrl !== scope.report.source)) throw new ClinicalError(503, "UNVERIFIED_CITATIONS", "The evidence service returned unsupported citations.");
+    hooks.onEvidenceVerified?.();
     audit(fresh, voice ? "NOVA_VOICE_EVIDENCE_RETURNED" : "BEDROCK_TEXT_EVIDENCE_RETURNED"); await hooks.persist(fresh.session); return c.json(result);
   };
   router.post("/reports/:id/chat", c => callAi(c, false));

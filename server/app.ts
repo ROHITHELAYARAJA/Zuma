@@ -26,6 +26,8 @@ const allowedOrigins = () => [...new Set([...(process.env.APP_ORIGINS ?? "http:/
 export function createApp(options: { dbPath?: string } = {}) {
   const store = createStateStore(options);
   const app = new Hono();
+  let lastSuccessfulCloudRequestAt: string | null = null;
+  const markCloudSuccess = () => { lastSuccessfulCloudRequestAt = new Date().toISOString(); };
   const getState = (session: StoredSession, id: string) => {
     const parsed = patientIdSchema.safeParse(id);
     if (!parsed.success || !session.states[parsed.data]) throw new ClinicalError(404, "PATIENT_NOT_FOUND", "Patient does not exist in the synthetic workspace.");
@@ -102,9 +104,9 @@ export function createApp(options: { dbPath?: string } = {}) {
     await next();
   });
   app.route("/api/platform", platformRouter);
-  app.route("/api/abdm", createAbdmRouter({ getSession, persist }));
+  app.route("/api/abdm", createAbdmRouter({ getSession, persist, onEvidenceVerified: markCloudSuccess }));
   app.get("/", c => c.json({ service: "zuma-clinical-api", health: "/api/health", website: "https://zumaai.vercel.app" }));
-  app.get("/api/health", (c) => c.json({ ok: true, mode: "synthetic-demo", storage: store.provider, authProvider: authProvider(), cloudConnected: false, fhirValidation: "local-structural-checks" }));
+  app.get("/api/health", (c) => c.json({ ok: true, mode: "synthetic-demo", storage: store.provider, authProvider: authProvider(), cloudConnected: Boolean(lastSuccessfulCloudRequestAt), cloudConnectionTested: Boolean(lastSuccessfulCloudRequestAt), lastSuccessfulCloudRequestAt, ragServiceConfigured: Boolean(process.env.RAG_SERVICE_URL && (process.env.RAG_SERVICE_API_KEY?.length ?? 0) >= 32), notice: "Cloud status records a successful verified answer since this API process started; configuration alone is not a connection test.", fhirValidation: "local-structural-checks" }));
   app.get("/api/auth/config", (c) => c.json({ provider: authProvider(), supabaseConfigured: supabaseConfigured(), syntheticOnly: true }));
   app.post("/api/auth/login", async (c) => {
     const input = await body(c, z.object({ email: z.email().max(254), password: z.string().min(1).max(1024) }));
@@ -220,6 +222,7 @@ export function createApp(options: { dbPath?: string } = {}) {
       const fresh = await freshUnchanged(c, state.patientId, version);
       const available = new Map(citationsFor(records).map(citation => [citation.id, citation]));
       if (result.sourceVersion !== version || typeof result.answer !== "string" || !Array.isArray(result.evidenceIds) || result.evidenceIds.some((id: unknown) => typeof id !== "string" || !available.has(id))) throw new ClinicalError(503, "UNVERIFIED_CITATIONS", "The answer sources could not be verified.");
+      markCloudSuccess();
       addAudit(fresh.state, "CROSS_HOSPITAL_AWS_ANSWER", "allowed", "Patient identity, current permission and AWS evidence source membership checked.");
       await persist(fresh.session);
       return c.json({ id: randomUUID(), mode: "bedrock-kb", answer: result.answer, citations: result.evidenceIds.map((id: string) => available.get(id)), warning: "AWS-retrieved fictional evidence. Doctor review required; no treatment recommendation." });
@@ -244,6 +247,7 @@ export function createApp(options: { dbPath?: string } = {}) {
         const ids = new Set(result.evidenceIds), allowed = new Set(evidence.map((item) => item.id));
         if (result.evidenceIds.some((id) => !allowed.has(id))) throw new Error("UNKNOWN_CITATION");
         answer = { ...answer, mode: process.env.RAG_PROVIDER === "bedrock-kb" ? "bedrock-kb" : "bedrock", answer: result.answer, citations: citationsFor(records).filter((citation) => ids.has(citation.id)), warning: "Configured Bedrock response with permission-scoped evidence. Clinician verification remains required." };
+        markCloudSuccess();
         addAudit(state, "BEDROCK_QUERY", "allowed", "Current permissions and source-reference membership checked before releasing the configured cloud answer.");
       } catch (error) {
         if (error instanceof ClinicalError) throw error;
@@ -283,6 +287,7 @@ export function createApp(options: { dbPath?: string } = {}) {
     const fresh = await freshUnchanged(c, "ravi", version);
     const available = new Map(citationsFor(records).map(citation => [citation.id, citation]));
     if (result.sourceVersion !== version || typeof result.answer !== "string" || !Array.isArray(result.evidenceIds) || result.evidenceIds.some((id: unknown) => typeof id !== "string" || !available.has(id))) throw new ClinicalError(503, "UNVERIFIED_CITATIONS", "Voice answer sources could not be verified.");
+    markCloudSuccess();
     addAudit(fresh.state, "CROSS_HOSPITAL_AWS_VOICE", "allowed", "Voice used the same permitted evidence and source-version checks as text.");
     await persist(fresh.session);
     return c.json({ id: randomUUID(), answer: result.answer, mode: "bedrock-kb", citations: result.evidenceIds.map((id: string) => available.get(id)), warning: "AI draft from fictional evidence. Doctor review required.", transcript: result.transcript, audioBase64: result.audioBase64, audioContentType: result.audioContentType });
