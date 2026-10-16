@@ -40,7 +40,7 @@ export function evidenceObjects(patientId: string, record: ClinicalRecord, mode 
   const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]!));
   const key = `${prefix}hospital-${record.hospitalId}/${patientId}/${record.id}/v${record.version}.html`;
   const attributes = { patient_id: patientId, hospital_id: record.hospitalId, record_id: record.id, version: record.version, category: record.kind, content_sha256: evidenceDigest(record), synthetic: true };
-  const typed = Object.fromEntries(Object.entries(attributes).map(([name, value]) => [name, { value: typeof value === "number" ? { type: "NUMBER", numberValue: value } : typeof value === "boolean" ? { type: "BOOLEAN", booleanValue: value } : { type: "STRING", stringValue: value }, includeForEmbedding: false }]));
+  const typed = Object.fromEntries(Object.entries({ ...attributes, synthetic: "true" }).map(([name, value]) => [name, { value: typeof value === "number" ? { type: "NUMBER", numberValue: value } : { type: "STRING", stringValue: value }, includeForEmbedding: false }]));
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escape(record.title)} — synthetic evidence</title></head><body><article><h1>${escape(record.title)}</h1><pre>${escape(canonicalRecordText(record))}</pre></article></body></html>`;
   return { key, html, metadataKey: `${key}.metadata.json`, metadata: JSON.stringify({ metadataAttributes: mode === "managed" ? typed : attributes }) };
 }

@@ -2,7 +2,7 @@
 
 import type { ClinicalRecord, Workspace } from "../shared/types";
 import { useState } from "react";
-import { post } from "../src/lib/api";
+import { api, post } from "../src/lib/api";
 import "./comparison.css";
 
 export default function ComparisonPanel({ workspace: w, busy, onOpen, onIdentity, onConsent, onReview }: {
@@ -14,9 +14,16 @@ export default function ComparisonPanel({ workspace: w, busy, onOpen, onIdentity
   onReview: () => void;
 }) {
   const [indexing, setIndexing] = useState(false), [indexNotice, setIndexNotice] = useState("");
+  const [jobId, setJobId] = useState("");
   async function indexEvidence() {
     setIndexing(true); setIndexNotice("");
-    try { const result = await post<{jobId:string;status:string}>("/comparison/ingest"); setIndexNotice(`AWS ingestion job ${result.jobId}: ${result.status}. Indexing is asynchronous; this is not a completed retrieval check. Try a specific question after ingestion completes.`); }
+    try { const result = await post<{jobId:string;status:string}>("/comparison/ingest"); setJobId(result.jobId); setIndexNotice(`Evidence indexing: ${result.status}. Check its status before asking a question.`); }
+    catch (error) { setIndexNotice((error as Error).message); }
+    finally { setIndexing(false); }
+  }
+  async function checkIndex() {
+    setIndexing(true);
+    try { const result = await api<{status:string;ready:boolean;failureReasons:string[]}>(`/comparison/ingestion/${jobId}`); setIndexNotice(result.ready ? "Evidence indexing completed. Ask Zuma a question and inspect its supporting sources." : `Evidence indexing: ${result.status}. ${result.failureReasons.join(" ")}`); }
     catch (error) { setIndexNotice((error as Error).message); }
     finally { setIndexing(false); }
   }
@@ -36,7 +43,7 @@ export default function ComparisonPanel({ workspace: w, busy, onOpen, onIdentity
     <p className="comparison-disclosure">Fictional demonstration records stored in this clinician’s session. This is not a live hospital connection or approved ABDM integration. No manual PDF upload is needed for this prepared scenario.</p>
     <ol className="comparison-features" aria-label="Seven Zuma features">{features.map((label, i) => <li key={label}><span>{String(i + 1).padStart(2, "0")}</span>{label}</li>)}</ol>
     <div className="comparison-controls"><button className="button small" disabled={busy} onClick={onIdentity}>1. Review patient identity</button><button className="button small" disabled={busy} onClick={onConsent}>2. Check demo permission</button><button className="button primary small" disabled={busy || !w.access.allowed} onClick={onReview}>3. Review & approve</button></div>
-    <div className="comparison-controls"><button className="button small" disabled={busy || indexing || !w.access.allowed} onClick={() => void indexEvidence()}>{indexing ? "Sending permitted evidence…" : "Index permitted demo evidence"}</button><small>Required once when this scenario is new to the knowledge base.</small></div>
+    <div className="comparison-controls"><button className="button small" disabled={busy || indexing || !w.access.allowed} onClick={() => void indexEvidence()}>{indexing ? "Checking evidence…" : "Index permitted demo evidence"}</button>{jobId && <button className="button small" disabled={busy || indexing || !w.access.allowed} onClick={() => void checkIndex()}>Check indexing status</button>}<small>Required once when this scenario is new to the knowledge base.</small></div>
     {indexNotice && <p role="status" className="comparison-access">{indexNotice}</p>}
     {!w.access.allowed && <p role="status" className="comparison-access">Hospital A evidence is withheld: {w.access.reason}</p>}
     <div className="comparison-table-wrap"><table><caption>Source comparison · open a value to inspect its original evidence</caption><thead><tr><th scope="col">Medical information</th><th scope="col">Hospital A · previous</th><th scope="col">Hospital B · current</th><th scope="col">Doctor review</th></tr></thead><tbody>{rows.map(row => <tr key={row.label}><th scope="row">{row.label}</th>{(["A", "B"] as const).map(hospital => {

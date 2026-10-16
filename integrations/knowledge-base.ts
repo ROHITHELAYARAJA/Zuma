@@ -18,7 +18,7 @@ export async function retrieveKnowledgeEvidence(input: { question: string; patie
     allow("hospital_id", [...new Set(input.records.map((record) => record.hospitalId))]),
     allow("record_id", [...records.keys()]),
     allow("category", [...new Set(input.records.map((record) => record.kind))]),
-    { equals: { key: "synthetic", value: true } },
+    { equals: { key: "synthetic", value: process.env.BEDROCK_KB_MODE === "customer" ? true : "true" } },
   ] };
   const client = new BedrockAgentRuntimeClient({ region, maxAttempts: 1 });
   try {
@@ -34,7 +34,7 @@ export async function retrieveKnowledgeEvidence(input: { question: string; patie
       if (!metadata || typeof metadata.record_id !== "string") continue;
       const record = records.get(metadata.record_id);
       if (!record || metadata.patient_id !== input.patientId || metadata.hospital_id !== record.hospitalId ||
-          metadata.version !== record.version || metadata.category !== record.kind || metadata.synthetic !== true ||
+          metadata.version !== record.version || metadata.category !== record.kind || metadata.synthetic !== (process.env.BEDROCK_KB_MODE === "customer" ? true : "true") ||
           metadata.content_sha256 !== evidenceDigest(record)) continue;
       if (matched.has(record.id)) continue;
       const passage = candidate.content?.text?.trim();

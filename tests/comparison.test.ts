@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createApp } from "../server/app";
 import type { Workspace } from "../shared/types";
+import { evidenceObjects } from "../integrations/ingestion";
 
 let instance: ReturnType<typeof createApp>;
 let cookie: string;
@@ -35,6 +36,9 @@ it("compares the same fictional patient with dated evidence and distinguishes ch
   expect(workspace.findings.find(finding => finding.id === "finding-glucose-change")?.category).toBe("change");
   expect(workspace.mappingIssues.some(issue => issue.sourceId === "b-unmapped-03")).toBe(true);
   expect(workspace.validation?.valid).toBe(true);
+  const metadata = JSON.parse(evidenceObjects("ravi", workspace.records[0], "managed").metadata).metadataAttributes;
+  expect(metadata.synthetic.value).toEqual({ type: "STRING", stringValue: "true" });
+  expect(Object.values(metadata).some((field: any) => field.value.type === "BOOLEAN")).toBe(false);
 });
 it("never substitutes a local answer for comparison RAG", async () => {
   await start();
@@ -51,4 +55,8 @@ it("revoking permission invalidates approval, exports and voice access", async (
   expect((await call("/patients/ravi/export?format=fhir")).status).toBe(403);
   expect((await call("/comparison/voice", { audioBase64: "AAAA", sampleRate: 16000 })).status).toBe(403);
   expect((await call("/comparison/ingest", {})).status).toBe(403);
+});
+it("does not expose another session's ingestion job", async () => {
+  await start(); await allow();
+  expect((await call("/comparison/ingestion/ABCDEFGHIJ")).status).toBe(404);
 });

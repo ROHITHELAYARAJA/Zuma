@@ -258,9 +258,21 @@ export function createApp(options: { dbPath?: string } = {}) {
     const version = sourceVersion(state), { records } = retrieve(state);
     const result = await privateRag("/comparison/ingest", { objects: records.map(record => evidenceObjects(state.patientId, record)) });
     const fresh = await freshUnchanged(c, state.patientId, version);
+    const data = fresh.session.data as JobSession;
+    data.ingestionJobs = { ...data.ingestionJobs, [result.jobId]: { patientId: "ravi", sourceVersion: version } };
     addAudit(fresh.state, "COMPARISON_INGESTION_STARTED", "recorded", `AWS ingestion job ${result.jobId}; completion has not yet been verified.`);
     await persist(fresh.session);
     return c.json({ ...result, ready: false });
+  });
+  app.get("/api/comparison/ingestion/:id", async c => {
+    const session = await getSession(c), state = getState(session.data, "ravi"); requireDoctor(state);
+    if (!canReadForeign(state).allowed) throw new ClinicalError(403, "CONSENT_REQUIRED", "Valid permission is required to check this evidence job.");
+    const jobId = c.req.param("id"), entry = (session.data as JobSession).ingestionJobs?.[jobId];
+    if (!entry || entry.patientId !== "ravi" || !/^[A-Za-z0-9]{10}$/.test(jobId)) throw new ClinicalError(404, "INGESTION_JOB_NOT_FOUND", "This job does not belong to the current comparison session.");
+    await freshUnchanged(c, "ravi", entry.sourceVersion);
+    const result = await privateRag("/comparison/ingestion", { jobId });
+    await freshUnchanged(c, "ravi", entry.sourceVersion);
+    return c.json(result);
   });
   app.post("/api/comparison/voice", async c => {
     const input = await body(c, z.object({ audioBase64: z.string().min(1).max(1280000), sampleRate: z.literal(16000) }));

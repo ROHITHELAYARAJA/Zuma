@@ -9,7 +9,7 @@ class ComparisonRetrievalTests(unittest.TestCase):
         text = "Synthetic clinical evidence. Not a real patient. Metformin 500 mg once daily."
         self.record = {"id": "cite-b-medication-02", "recordId": "record-b-medication-02", "hospitalId": "B", "version": 1, "category": "medication", "text": text, "sha256": hashlib.sha256(text.encode()).hexdigest()}
         self.payload = {"patientId": "ravi", "sourceVersion": "version-1", "question": "What medicine was recorded?", "records": [self.record]}
-        self.metadata = {"patient_id": "ravi", "synthetic": True, "record_id": self.record["recordId"], "hospital_id": "B", "version": 1, "category": "medication", "content_sha256": self.record["sha256"]}
+        self.metadata = {"patient_id": "ravi", "synthetic": "true", "record_id": self.record["recordId"], "hospital_id": "B", "version": 1, "category": "medication", "content_sha256": self.record["sha256"]}
         self.aws = MagicMock()
         self.session = patch("zuma_aws.comparison.session", return_value=self.aws).start()
         self.env = patch.dict("os.environ", {"BEDROCK_KNOWLEDGE_BASE_ID": "ABCDEFGHIJ", "BEDROCK_TEXT_MODEL_ID": "test-model"}).start()

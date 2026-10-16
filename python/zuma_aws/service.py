@@ -54,6 +54,22 @@ class EvidenceObject(BaseModel):
 class ComparisonIngestion(BaseModel):
     objects: list[EvidenceObject] = Field(min_length=1, max_length=80)
 
+class ComparisonIngestionStatus(BaseModel):
+    jobId: str = Field(pattern="^[A-Za-z0-9]{10}$")
+
+@app.post("/comparison/ingestion", dependencies=[Depends(authorized)])
+async def comparison_ingestion_status(body: ComparisonIngestionStatus):
+    from .comparison import session, required
+    def status():
+        job = session().client("bedrock-agent").get_ingestion_job(knowledgeBaseId=required("BEDROCK_KNOWLEDGE_BASE_ID"), dataSourceId=required("BEDROCK_DATA_SOURCE_ID"), ingestionJobId=body.jobId)["ingestionJob"]
+        warnings = job.get("failureReasons", [])
+        statistics = job.get("statistics", {})
+        return {"jobId": body.jobId, "status": job["status"], "ready": job["status"] == "COMPLETE" and not warnings and not statistics.get("numberOfDocumentsFailed", 0), "statistics": statistics, "failureReasons": warnings}
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(status), timeout=25)
+    except Exception as exc:
+        raise HTTPException(503, str(exc) if isinstance(exc, ValueError) else type(exc).__name__) from None
+
 class ComparisonSpeech(ComparisonQuestion):
     audioBase64: str = Field(min_length=1, max_length=1280000)
     sampleRate: int = 16000

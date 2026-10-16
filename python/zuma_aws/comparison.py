@@ -47,9 +47,10 @@ def answer_comparison(payload):
     config = Config(connect_timeout=8, read_timeout=55, retries={"max_attempts": 1})
     kb = aws.client("bedrock-agent-runtime", config=config)
     ids = [record["recordId"] for record in records]
+    synthetic = True if os.environ.get("BEDROCK_KB_MODE") == "customer" else "true"
     criteria = {"andAll": [
         {"equals": {"key": "patient_id", "value": "ravi"}},
-        {"equals": {"key": "synthetic", "value": True}},
+        {"equals": {"key": "synthetic", "value": synthetic}},
         {"in": {"key": "record_id", "value": ids}},
     ]}
     mode = "vectorSearchConfiguration" if os.environ.get("BEDROCK_KB_MODE") == "customer" else "managedSearchConfiguration"
@@ -59,7 +60,7 @@ def answer_comparison(payload):
     for match in response.get("retrievalResults", []):
         metadata = match.get("metadata", {})
         record = allowed.get(metadata.get("record_id"))
-        if not record or metadata.get("patient_id") != "ravi" or metadata.get("synthetic") is not True:
+        if not record or metadata.get("patient_id") != "ravi" or metadata.get("synthetic") != synthetic:
             continue
         if any(metadata.get(key) != record[field] for key, field in (("hospital_id", "hospitalId"), ("version", "version"), ("category", "category"), ("content_sha256", "sha256"))):
             continue
