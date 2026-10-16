@@ -43,6 +43,14 @@ class ComparisonRetrievalTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SUMMARY_REQUIRES_EVIDENCE_REVIEW"):
                 answer_comparison(self.payload)
 
+    def test_supported_statements_remain_when_an_unsupported_statement_is_removed(self):
+        self.matches(self.metadata)
+        draft = {"sections": [{"heading": "Medicine", "claims": [{"text": "Metformin was recorded.", "evidenceIds": [self.record["id"]]}, {"text": "Change treatment immediately.", "evidenceIds": [self.record["id"]]}]}]}
+        with patch("zuma_aws.comparison.model_json", side_effect=[draft, {"supported": [True, False]}]):
+            answer = answer_comparison(self.payload)
+        self.assertIn("Metformin was recorded.", answer["answer"])
+        self.assertNotIn("Change treatment", answer["answer"])
+
     def test_ingestion_cannot_write_outside_comparison_prefix(self):
         with patch.dict("os.environ", {"S3_KMS_KEY_ID": "test", "S3_REPORT_BUCKET": "test", "BEDROCK_DATA_SOURCE_ID": "test"}):
             with self.assertRaisesRegex(ValueError, "INVALID_COMPARISON_EVIDENCE_PATH"):

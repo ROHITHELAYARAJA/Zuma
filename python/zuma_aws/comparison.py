@@ -82,8 +82,14 @@ def answer_comparison(payload):
     if claims:
         checked = model_json(runtime, model, 'Check each claim against its supplied evidence. Return JSON {"supported":[true or false for each claim in order]}. True only if the entire statement is directly supported; reject added medical interpretation, invented dates or missing supporting sources.', {"claims": [{"text": claim["text"], "evidence": [evidence[i]["text"] for i in claim["evidenceIds"]]} for claim in claims]})
         support = checked.get("supported")
-        if not isinstance(support, list) or len(support) != len(claims) or any(value is not True for value in support):
+        if not isinstance(support, list) or len(support) != len(claims) or any(type(value) is not bool for value in support):
             raise ValueError("SUMMARY_REQUIRES_EVIDENCE_REVIEW")
+        retained = {id(claim) for claim, supported in zip(claims, support) if supported}
+        if not retained:
+            raise ValueError("SUMMARY_REQUIRES_EVIDENCE_REVIEW")
+        for section in sections:
+            section["claims"] = [claim for claim in section["claims"] if id(claim) in retained]
+        claims = [claim for claim in claims if id(claim) in retained]
     answer = "\n\n".join(section["heading"] + "\n" + "\n".join(claim["text"] + " " + " ".join("[" + i + "]" for i in claim["evidenceIds"]) for claim in section["claims"]) for section in sections if section["claims"])
     ordered_ids = list(dict.fromkeys(i for claim in claims for i in claim["evidenceIds"]))
     for number, evidence_id in enumerate(ordered_ids, 1):
