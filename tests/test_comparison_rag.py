@@ -42,7 +42,7 @@ class ComparisonRetrievalTests(unittest.TestCase):
                 answer_comparison(self.payload)
 
     def test_ingestion_cannot_write_outside_comparison_prefix(self):
-        with patch.dict("os.environ", {"S3_KMS_KEY_ID": "test"}):
+        with patch.dict("os.environ", {"S3_KMS_KEY_ID": "test", "S3_REPORT_BUCKET": "test", "BEDROCK_DATA_SOURCE_ID": "test"}):
             with self.assertRaisesRegex(ValueError, "INVALID_COMPARISON_EVIDENCE_PATH"):
                 ingest_comparison([{"key": "raw/abdm/overwrite.html", "metadataKey": "raw/abdm/overwrite.html.metadata.json", "html": "test", "metadata": "{}"}])
 

@@ -6,6 +6,15 @@ import boto3
 from botocore.config import Config
 from .rag import model_json, validate_draft
 
+COMPARISON_ENVIRONMENT = ("BEDROCK_KNOWLEDGE_BASE_ID", "BEDROCK_DATA_SOURCE_ID", "S3_REPORT_BUCKET", "S3_KMS_KEY_ID", "BEDROCK_TEXT_MODEL_ID")
+
+
+def required(name):
+    value = os.environ.get(name, "").strip()
+    if not value:
+        raise ValueError("COMPARISON_CONFIGURATION_REQUIRED:" + name)
+    return value
+
 
 def session():
     if os.environ.get("AWS_CLOUD_ENABLED") != "true":
@@ -66,9 +75,10 @@ def answer_comparison(payload):
 def ingest_comparison(objects):
     if not 1 <= len(objects) <= 80:
         raise ValueError("INVALID_EVIDENCE_COUNT")
+    config = {name: required(name) for name in COMPARISON_ENVIRONMENT}
     aws = session()
     s3 = aws.client("s3")
-    encryption = {"ServerSideEncryption": "aws:kms", "SSEKMSKeyId": os.environ["S3_KMS_KEY_ID"]}
+    encryption = {"ServerSideEncryption": "aws:kms", "SSEKMSKeyId": config["S3_KMS_KEY_ID"]}
     for item in objects:
         if not re.fullmatch(r"evidence/(?:[A-Za-z0-9_-]+/)*hospital-[AB]/ravi/record-[A-Za-z0-9_-]+/v[1-9][0-9]*\.html", item["key"]) or item["metadataKey"] != item["key"] + ".metadata.json":
             raise ValueError("INVALID_COMPARISON_EVIDENCE_PATH")
@@ -79,6 +89,6 @@ def ingest_comparison(objects):
         if value("patient_id") != "ravi":
             raise ValueError("COMPARISON_PATIENT_MISMATCH")
         for key, body, content_type in ((item["metadataKey"], item["metadata"], "application/json"), (item["key"], item["html"], "text/html; charset=utf-8")):
-            s3.put_object(Bucket=os.environ["S3_REPORT_BUCKET"], Key=key, Body=body.encode(), ContentType=content_type, **encryption)
-    job = aws.client("bedrock-agent").start_ingestion_job(knowledgeBaseId=os.environ["BEDROCK_KNOWLEDGE_BASE_ID"], dataSourceId=os.environ["BEDROCK_DATA_SOURCE_ID"], description="Fictional Ravi cross-hospital source comparison")["ingestionJob"]
+            s3.put_object(Bucket=config["S3_REPORT_BUCKET"], Key=key, Body=body.encode(), ContentType=content_type, **encryption)
+    job = aws.client("bedrock-agent").start_ingestion_job(knowledgeBaseId=config["BEDROCK_KNOWLEDGE_BASE_ID"], dataSourceId=config["BEDROCK_DATA_SOURCE_ID"], description="Fictional Ravi cross-hospital source comparison")["ingestionJob"]
     return {"jobId": job["ingestionJobId"], "status": job["status"], "documents": len(objects)}

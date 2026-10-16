@@ -255,6 +255,7 @@ export default function App({ comparison = false }: { comparison?: boolean } = {
         <a
           href="#"
           className="brand"
+          aria-label="Zuma workspace"
           onClick={(e) => {
             e.preventDefault();
             setPage("workspace");
@@ -271,6 +272,7 @@ export default function App({ comparison = false }: { comparison?: boolean } = {
           {navigation.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
+              aria-label={label}
               className={`nav-item ${page === id ? "active" : ""}`}
               onClick={() => {
                 setPage(id);

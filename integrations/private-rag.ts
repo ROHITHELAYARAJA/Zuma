@@ -8,6 +8,9 @@ export async function privateRag(path: string, payload: unknown) {
   if (!["http:", "https:"].includes(target.protocol) || target.username || target.password) throw new ClinicalError(503, "INVALID_RAG_SERVICE_URL", "Invalid evidence service address.");
   const response = await fetch(new URL(path, target), { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify(payload), signal: AbortSignal.timeout(115000) });
   const result = await response.json();
-  if (!response.ok) throw new ClinicalError(503, "EVIDENCE_SERVICE_FAILED", typeof result.detail === "string" ? result.detail : "The evidence service could not verify this request.");
+  if (!response.ok) {
+    const detail = typeof result.detail === "string" ? result.detail : "The evidence service could not verify this request.";
+    throw new ClinicalError(503, "EVIDENCE_SERVICE_FAILED", detail.startsWith("COMPARISON_CONFIGURATION_REQUIRED:") ? `The Python service needs the existing project's ${detail.split(":")[1]} setting before indexing can run.` : detail);
+  }
   return result;
 }
