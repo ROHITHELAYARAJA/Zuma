@@ -1,4 +1,6 @@
 import { createAbdmRouter } from "./abdm";
+import { readHospitalDatabase } from "./hospital-database";
+import { createMockExchangeRouter } from "./mock-exchange";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -105,6 +107,7 @@ export function createApp(options: { dbPath?: string } = {}) {
   });
   app.route("/api/platform", platformRouter);
   app.route("/api/abdm", createAbdmRouter({ getSession, persist, onEvidenceVerified: markCloudSuccess }));
+  app.route("/api/abdm-mock", createMockExchangeRouter({ getSession, persist }));
   app.get("/", c => c.json({ service: "zuma-clinical-api", health: "/api/health", website: "https://zumaai.vercel.app" }));
   app.get("/api/health", (c) => c.json({ ok: true, mode: "synthetic-demo", storage: store.provider, authProvider: authProvider(), cloudConnected: Boolean(lastSuccessfulCloudRequestAt), cloudConnectionTested: Boolean(lastSuccessfulCloudRequestAt), lastSuccessfulCloudRequestAt, ragServiceConfigured: Boolean(process.env.RAG_SERVICE_URL && (process.env.RAG_SERVICE_API_KEY?.length ?? 0) >= 32), notice: "Cloud status records a successful verified answer since this API process started; configuration alone is not a connection test.", fhirValidation: "local-structural-checks" }));
   app.get("/api/auth/config", (c) => c.json({ provider: authProvider(), supabaseConfigured: supabaseConfigured(), syntheticOnly: true }));
@@ -148,15 +151,17 @@ export function createApp(options: { dbPath?: string } = {}) {
     const session = await getSession(c);
     if (session.identity.actor.role !== "doctor" || session.identity.actor.hospitalId !== "B") throw new ClinicalError(403, "ROLE_DENIED", "Hospital B clinician access is required.");
     const data = session.data as JobSession;
-    if (data.comparisonVersion !== 1) {
+    if (data.comparisonVersion !== 2) {
       const state = createState("ravi");
       state.clinician = { id: session.identity.actor.id, name: session.identity.actor.name };
       state.linkedPatientId = null;
       state.consent.status = "revoked";
       state.audit = [];
+      state.sources = await readHospitalDatabase("B");
+      state.connectorStatus = { A: "unavailable", B: "connected" };
       addAudit(state, "COMPARISON_DEMO_STARTED", "recorded", "Fictional two-hospital Ravi scenario. Identity review and simulated permission are required. No live ABDM exchange is claimed.");
       data.states.ravi = state;
-      data.comparisonVersion = 1;
+      data.comparisonVersion = 2;
       await persist(session);
     }
     return c.json(currentWorkspace(data.states.ravi));

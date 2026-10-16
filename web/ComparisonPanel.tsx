@@ -5,14 +5,27 @@ import { useState } from "react";
 import { api, post } from "../src/lib/api";
 import "./comparison.css";
 
-export default function ComparisonPanel({ workspace: w, busy, onOpen, onIdentity, onConsent, onReview }: {
+export default function ComparisonPanel({ workspace: w, busy, onOpen, onIdentity, onConsent, onReview, onRetrieved }: {
   workspace: Workspace;
   busy: boolean;
   onOpen: (id: string) => void;
   onIdentity: () => void;
   onConsent: () => void;
   onReview: () => void;
+  onRetrieved: (workspace: Workspace) => void;
 }) {
+  const [exchanging, setExchanging] = useState(false), [receipt, setReceipt] = useState("");
+  async function exchange() {
+    setExchanging(true); setReceipt("");
+    try {
+      const consent = await post<{consentId:string}>("/abdm-mock/v1/consent-init");
+      const result = await post<{transferId:string;fhirResources:number;digest:string}>("/abdm-mock/v1/health-information/fetch-records", {consentId:consent.consentId});
+      await api(`/abdm-mock/v1/health-information/status/${result.transferId}`);
+      onRetrieved(await api<Workspace>("/patients/ravi/workspace"));
+      setReceipt(`HIP A → mock gateway → HIU B: ${result.fhirResources} FHIR resources received. Transfer ${result.transferId}. SHA-256 ${result.digest}.`);
+    } catch (error) { setReceipt((error as Error).message); }
+    finally { setExchanging(false); }
+  }
   const [indexing, setIndexing] = useState(false), [indexNotice, setIndexNotice] = useState("");
   const [jobId, setJobId] = useState("");
   async function indexEvidence() {
@@ -36,11 +49,13 @@ export default function ComparisonPanel({ workspace: w, busy, onOpen, onIdentity
   return <section className="zuma-comparison" aria-label="Cross-hospital comparison">
     <div className="comparison-heading"><div><span className="label">ZUMA · CROSS-HOSPITAL REVIEW</span><h2>Ravi’s records, together.</h2><p>Compare dated source statements. Keep the doctor in control.</p></div><a href="/workspace">Public repository samples ↗</a></div>
     <div className="comparison-flow" aria-label="Record exchange workflow">
-      <article><strong>Rohit Hospital A</strong><span>Previous records · A-102</span><small>Simulated ABDM exchange input</small></article><span aria-hidden="true">→</span>
+      <article><strong>Rohit Hospital A · HIP</strong><span>Previous records · A-102</span><small>Supabase records → mock gateway</small></article><span aria-hidden="true">→</span>
       <article className="comparison-center"><strong>ZUMA</strong><span>Identity → permission → FHIR</span><small>Compare → cite → doctor review</small></article><span aria-hidden="true">←</span>
-      <article><strong>Nisanth Hospital B</strong><span>Current records · B-507</span><small>Simulated hospital database input</small></article>
+      <article><strong>Nisanth Hospital B · HIU</strong><span>Current records · B-507</span><small>Hospital database + permitted FHIR receipt</small></article>
     </div>
-    <p className="comparison-disclosure">Fictional demonstration records stored in this clinician’s session. This is not a live hospital connection or approved ABDM integration. No manual PDF upload is needed for this prepared scenario.</p>
+    <p className="comparison-disclosure">Fictional hospital records retrieved from Supabase. HIP, mock gateway and HIU are co-hosted prototype modules; this is not the official NHA gateway runtime or an approved live ABDM connection.</p>
+    <div className="comparison-controls"><button className="button primary small" disabled={busy || exchanging || !w.access.allowed} onClick={() => void exchange()}>{exchanging ? "Retrieving hospital records…" : "Retrieve through mock HIP → gateway → HIU"}</button></div>
+    {receipt && <p role="status" className="comparison-access" style={{overflowWrap:"anywhere"}}>{receipt}</p>}
     <ol className="comparison-features" aria-label="Seven Zuma features">{features.map((label, i) => <li key={label}><span>{String(i + 1).padStart(2, "0")}</span>{label}</li>)}</ol>
     <div className="comparison-controls"><button className="button small" disabled={busy} onClick={onIdentity}>1. Review patient identity</button><button className="button small" disabled={busy} onClick={onConsent}>2. Check demo permission</button><button className="button primary small" disabled={busy || !w.access.allowed} onClick={onReview}>3. Review & approve</button></div>
     <div className="comparison-controls"><button className="button small" disabled={busy || indexing || !w.access.allowed} onClick={() => void indexEvidence()}>{indexing ? "Checking evidence…" : "Index permitted demo evidence"}</button>{jobId && <button className="button small" disabled={busy || indexing || !w.access.allowed} onClick={() => void checkIndex()}>Check indexing status</button>}<small>Required once when this scenario is new to the knowledge base.</small></div>

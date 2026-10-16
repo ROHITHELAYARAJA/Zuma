@@ -400,7 +400,7 @@ export default function App({ comparison = false }: { comparison?: boolean } = {
             <Busy label="Checking the permitted records…" />
           ) : page === "workspace" ? (
             <>
-              {comparison && <ComparisonPanel workspace={w} busy={busy} onOpen={id => void openRecord(id)} onIdentity={() => setPage("matching")} onConsent={() => setPage("consent")} onReview={() => setDialog("review")} />}
+              {comparison && <ComparisonPanel workspace={w} busy={busy} onRetrieved={setW} onOpen={id => void openRecord(id)} onIdentity={() => setPage("matching")} onConsent={() => setPage("consent")} onReview={() => setDialog("review")} />}
               {!w.records.length && <div className="notice-strip" style={{ margin: "0 0 12px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}><p>Retrieve the permitted hospital records to begin this patient’s review.</p><button className="button primary small" onClick={() => setPage("integration")}>Open hospital retrieval</button></div>}
               <ConflictBanner
                 workspace={w}

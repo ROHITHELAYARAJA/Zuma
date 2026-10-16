@@ -2,6 +2,10 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createApp } from "../server/app";
 import type { Workspace } from "../shared/types";
 import { evidenceObjects } from "../integrations/ingestion";
+vi.mock("../server/hospital-database", async () => {
+  const { SOURCE_RECORDS } = await import("../server/clinical/fixtures");
+  return { readHospitalDatabase: async (id: string, categories?: string[]) => structuredClone(SOURCE_RECORDS.filter(s => s.hospitalId === id && (!categories || categories.includes(String(s.payload.kind ?? s.payload.category))))) };
+});
 
 let instance: ReturnType<typeof createApp>;
 let cookie: string;
@@ -18,15 +22,29 @@ async function call(path: string, body?: unknown) {
 async function start() { return (await call("/comparison/session", {})).json() as Promise<Workspace>; }
 async function allow() {
   await call("/matches/candidate-ravi-b/confirm", {});
-  return (await call("/consents/consent-ravi/grant", {})).json() as Promise<Workspace>;
+  await call("/consents/consent-ravi/grant", {});
+  const consent = await (await call("/abdm-mock/v1/consent-init", {})).json();
+  expect((await call("/abdm-mock/v1/health-information/fetch-records", {consentId:consent.consentId})).status).toBe(200);
+  return (await call("/patients/ravi/workspace")).json() as Promise<Workspace>;
 }
 it("withholds Hospital A until identity and permission are both confirmed", async () => {
   const initial = await start(); expect(initial.access.allowed).toBe(false); expect(initial.records.every(record => record.hospitalId === "B")).toBe(true);
+  expect((await call("/abdm-mock/v1/consent-init", {})).status).toBe(403);
   const permissionOnly = await (await call("/consents/consent-ravi/grant", {})).json() as Workspace;
   expect(permissionOnly.access.allowed).toBe(false);
   expect((await call("/matches/candidate-other-ravi/confirm", {})).status).toBe(409);
   const approvedIdentity = await allow(); expect(approvedIdentity.metrics.hospitals).toBe(2);
   const reload = await start(); expect(reload.access.allowed).toBe(true);
+});
+it("requires an owned consent artefact and invalidates transfer access after revocation", async () => {
+  await start(); await allow();
+  expect((await call("/abdm-mock/v1/health-information/fetch-records", {consentId:"wrong"})).status).toBe(403);
+  const consent = await (await call("/abdm-mock/v1/consent-init", {})).json();
+  const transfer = await (await call("/abdm-mock/v1/health-information/fetch-records", {consentId:consent.consentId})).json();
+  expect(transfer.fhirResources).toBe(10); expect(transfer.digest).toMatch(/^[a-f0-9]{64}$/);
+  expect((await call(`/abdm-mock/v1/health-information/status/${transfer.transferId}`)).status).toBe(200);
+  await call("/consents/consent-ravi/revoke", {});
+  expect((await call(`/abdm-mock/v1/health-information/status/${transfer.transferId}`)).status).toBe(403);
 });
 it("compares the same fictional patient with dated evidence and distinguishes changes from conflicts", async () => {
   await start(); const workspace = await allow();
