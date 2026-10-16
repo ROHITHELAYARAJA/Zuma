@@ -5,7 +5,7 @@ import '@fontsource/kalam/400.css';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: { default: 'Clinical workspace · Every record, one clear picture', template: '%s · Clinical workspace' },
+  title: { default: 'Zuma · Every record, one clear picture', template: '%s · Zuma' },
   description: 'Explore a synthetic, consent-based clinical record workspace with source-linked summaries, text and voice, and FHIR document review.',
   robots: { index: false, follow: false },
 };

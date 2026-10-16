@@ -33,3 +33,23 @@ it("stops before another paragraph if permission is revoked mid-stream",async()=
  while(true){const part=await reader.read();if(part.done)break;received+=decoder.decode(part.value);}
  expect(received).toContain("answer.error");expect(received).not.toContain("answer.complete");
 });
+
+it("persists source identity decisions and blocks retrieval after rejection",async()=>{
+ await app.request("/api/abdm/reports/abdm-a/consent/grant",{method:"POST"});
+ const before=await (await app.request("/api/abdm/reports/abdm-a/workspace")).json();
+ const reviewed=await app.request("/api/abdm/reports/abdm-a/identity/review",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({decision:"rejected",sourceVersion:before.sourceVersion})});
+ expect(reviewed.status).toBe(200);
+ const record=await reviewed.json();expect(record.identityReview.patientId).toBe(dataset.reports[0].patientId);expect(record.identityReview.sourceHash).toBe(dataset.reports[0].sha256);expect(record.allowed).toBe(false);
+ const answer=await app.request("/api/abdm/reports/abdm-a/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:"Show findings"})});
+ expect(answer.status).toBe(403);expect(fetch).not.toHaveBeenCalled();
+ const other=await (await app.request("/api/abdm/reports/abdm-b/workspace")).json();expect(other.identityReview.decision).toBe("pending");expect(other.birthDate).toBe("1991");
+});
+it("hides source provider details without permission and never grants registry verification",async()=>{
+ const before=await (await app.request("/api/abdm/reports/abdm-a/workspace")).json();expect(before.providers).toEqual([]);
+ const after=await (await app.request("/api/abdm/reports/abdm-a/consent/grant",{method:"POST"})).json();
+ expect(after.providers.map((p:{kind:string})=>p.kind).sort()).toEqual(["HCO","HCP"]);expect(after.providers.every((p:{registryStatus:string})=>p.registryStatus.includes("pending"))).toBe(true);
+});
+it("fails closed when the cloud evidence service URL is missing",async()=>{
+ vi.stubEnv("RAG_SERVICE_URL","");await app.request("/api/abdm/reports/abdm-a/consent/grant",{method:"POST"});
+ const answer=await app.request("/api/abdm/reports/abdm-a/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:"Show findings"})});expect(answer.status).toBe(503);expect(fetch).not.toHaveBeenCalled();
+});

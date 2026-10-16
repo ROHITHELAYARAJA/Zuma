@@ -10,7 +10,8 @@ import { ClinicalError } from "./clinical/engine";
 import dataset from "../data/abdm/dataset.json";
 
 type Session = StateSession & { identity: AuthIdentity };
-type Review = { consent: { active: boolean; expiresAt: string; version: number; doctorId: string; recipient: "B"; purpose: "treatment" }; approved?: { text: string; sourceVersion: string; doctor: string }; audit: { id: string; action: string; at: string; actor: string }[] };
+type IdentityReview = { decision: "pending" | "confirmed" | "rejected"; name: string; birthDate: string; patientId: string; reportId: string; sourceHash: string; actorId: string; actor: string; at: string };
+type Review = { identity?: IdentityReview; consent: { active: boolean; expiresAt: string; version: number; doctorId: string; recipient: "B"; purpose: "treatment" }; approved?: { text: string; sourceVersion: string; doctor: string }; audit: { id: string; action: string; at: string; actor: string }[] };
 type AbdmData = StoredSession & { abdm?: Record<string, Review> };
 type Answer = { answer: string; citations: { id: string; recordId: string; title: string; hospital: string; date: string; quote: string; sourceUrl: string }[]; sourceVersion: string; mode: string; warning: string; audioBase64?: string; audioContentType?: string; transcript?: string };
 const escape = (s: string) => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -35,11 +36,13 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
     data.abdm ??= {};
     data.abdm[report.reportId] ??= { consent: { active: false, expiresAt: new Date(0).toISOString(), version: 0, doctorId: session.identity.actor.id, recipient: "B", purpose: "treatment" }, audit: [] };
     const state = data.abdm[report.reportId];
-    const fingerprint = () => createHash("sha256").update(JSON.stringify({ hash: report.sha256, consent: state.consent, actor: session.identity.actor.id })).digest("hex").slice(0, 24);
-    const allowed = state.consent.active && state.consent.doctorId === session.identity.actor.id && Date.parse(state.consent.expiresAt) > Date.now();
+    state.identity ??= { decision: "pending", name: report.name, birthDate: report.birthDate, patientId: report.patientId, reportId: report.reportId, sourceHash: report.sha256, actorId: "", actor: "Not reviewed", at: new Date().toISOString() };
+    const fingerprint = () => createHash("sha256").update(JSON.stringify({ hash: report.sha256, consent: state.consent, identity: state.identity, actor: session.identity.actor.id })).digest("hex").slice(0, 24);
+    const identityRejected = state.identity?.sourceHash === report.sha256 && state.identity.decision === "rejected";
+    const allowed = !identityRejected && state.consent.active && state.consent.doctorId === session.identity.actor.id && Date.parse(state.consent.expiresAt) > Date.now();
     return { session, report, state, sourceVersion: fingerprint(), allowed, retrievedAt };
   };
-  const requireAccess = (scope: Awaited<ReturnType<typeof load>>) => { if (!scope.allowed) throw new ClinicalError(403, "CONSENT_REQUIRED", "Grant the report-specific demonstration permission before reading this report."); };
+  const requireAccess = (scope: Awaited<ReturnType<typeof load>>) => { if (!scope.allowed) throw new ClinicalError(403, "CONSENT_REQUIRED", "Check the patient identity and report-specific permission before reading this report."); };
   const audit = (scope: Awaited<ReturnType<typeof load>>, action: string) => { scope.state.audit.unshift({ id: randomUUID(), action, at: new Date().toISOString(), actor: scope.session.identity.actor.name }); scope.state.audit = scope.state.audit.slice(0, 100); };
   const qualityFindings = (report: typeof dataset.reports[number]) => {
     const codes = new Map<string, Set<string>>();
@@ -53,7 +56,13 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
     }
     return [...codes.entries()].filter(([, labels]) => labels.size > 1).map(([code, labels]) => ({ title: "Conflicting terminology in source", detail: code + " is used with different labels: " + [...labels].join(", ") + ". Human mapping review required; source preserved." }));
   };
-  const view = (scope: Awaited<ReturnType<typeof load>>) => ({ reportId: scope.report.reportId, patientId: scope.report.patientId, name: scope.report.name, clinicalSource: authProvider() === "supabase" ? "Supabase FHIR record" : "Repository sample", retrievedAt: scope.retrievedAt, birthDate: scope.report.birthDate, hospitalId: scope.report.hospitalId, clinicalDate: scope.report.clinicalDate, sourceUrl: scope.report.source, sha256: scope.report.sha256, sourceVersion: scope.sourceVersion, keyResults: scope.allowed ? scope.report.bundle.entry.flatMap(entry => {
+  const view = (scope: Awaited<ReturnType<typeof load>>) => ({ identityReview: scope.state.identity?.sourceHash === scope.report.sha256 ? scope.state.identity : null, identityStorage: authProvider() === "supabase" ? "supabase" : "demo", providers: scope.allowed ? scope.report.bundle.entry.flatMap(entry => {
+    const resource = entry.resource as Record<string, unknown>;
+    if (!["Practitioner", "Organization"].includes(String(resource.resourceType))) return [];
+    const names = resource.name as string | { text?: string; given?: string[]; family?: string }[] | undefined;
+    const name = typeof names === "string" ? names : names?.map(n => n.text || [...(n.given ?? []), n.family].filter(Boolean).join(" ")).join("; ");
+    return [{ id: String(resource.id), kind: resource.resourceType === "Practitioner" ? "HCP" : "HCO", name: name || "Name not recorded", registryStatus: "Repository sample; official registry verification pending" }];
+  }) : [], reportId: scope.report.reportId, patientId: scope.report.patientId, name: scope.report.name, clinicalSource: authProvider() === "supabase" ? "Supabase FHIR record" : "Repository sample", retrievedAt: scope.retrievedAt, birthDate: scope.report.birthDate, hospitalId: scope.report.hospitalId, clinicalDate: scope.report.clinicalDate, sourceUrl: scope.report.source, sha256: scope.report.sha256, sourceVersion: scope.sourceVersion, keyResults: scope.allowed ? scope.report.bundle.entry.flatMap(entry => {
     const resource = entry.resource as Record<string, unknown>;
     const quantity = resource.valueQuantity as { value?: number; unit?: string; code?: string } | undefined;
     if (resource.resourceType !== "Observation" || !quantity || typeof quantity.value !== "number" || !Number.isFinite(quantity.value)) return [];
@@ -74,6 +83,17 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
     return c.json({ reports, notice: dataset.notice, directory: authProvider() === "supabase" ? "supabase" : "repository", search: "Patient identity search uses verified directory fields. Clinical questions use permission-scoped AWS knowledge retrieval." });
   });
   router.get("/reports/:id/workspace", async c => { const scope = await load(c); await hooks.persist(scope.session); return c.json(view(scope)); });
+  router.post("/reports/:id/identity/review", async c => {
+    const scope = await load(c);
+    const input = z.object({ decision: z.enum(["confirmed", "rejected"]), sourceVersion: z.string() }).safeParse(await c.req.json().catch(() => null));
+    if (!input.success) throw new ClinicalError(400, "INVALID_IDENTITY_REVIEW", "Choose confirm or reject for the selected source identity.");
+    if (input.data.sourceVersion !== scope.sourceVersion) throw new ClinicalError(409, "SOURCE_CHANGED", "Refresh the patient record before reviewing identity.");
+    scope.state.identity = { decision: input.data.decision, name: scope.report.name, birthDate: scope.report.birthDate, patientId: scope.report.patientId, reportId: scope.report.reportId, sourceHash: scope.report.sha256, actorId: scope.session.identity.actor.id, actor: scope.session.identity.actor.name, at: new Date().toISOString() };
+    delete scope.state.approved;
+    audit(scope, input.data.decision === "confirmed" ? "SOURCE_PATIENT_IDENTITY_CONFIRMED" : "SOURCE_PATIENT_IDENTITY_REJECTED");
+    await hooks.persist(scope.session);
+    return c.json(view(await load(c)));
+  });
   router.post("/reports/:id/consent/:action", async c => {
     const scope = await load(c); const action = c.req.param("action");
     if (!["grant", "revoke"].includes(action)) throw new ClinicalError(400, "INVALID_ACTION", "Choose grant or revoke.");
@@ -88,7 +108,8 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
     if (!parsed.success) throw new ClinicalError(400, "INVALID_REQUEST", "Supply a question or 16 kHz PCM recording up to 30 seconds.");
     const key = process.env.RAG_SERVICE_API_KEY;
     if (!key || key.length < 32) throw new ClinicalError(503, "RAG_SERVICE_NOT_CONFIGURED", "Configure the private Python evidence service and its shared service key.");
-    const target = new URL(process.env.RAG_SERVICE_URL || "http://127.0.0.1:8795");
+    if (!process.env.RAG_SERVICE_URL) throw new ClinicalError(503, "RAG_SERVICE_NOT_CONFIGURED", "The evidence service is unavailable. No local answer was substituted.");
+    const target = new URL(process.env.RAG_SERVICE_URL);
     if (!["http:", "https:"].includes(target.protocol) || target.username || target.password) throw new ClinicalError(503, "INVALID_RAG_SERVICE_URL", "Invalid Python service origin.");
     const response = await fetch(new URL(voice ? "/voice" : "/answer", target), { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ ...parsed.data, reportId: scope.report.reportId, patientId: scope.report.patientId, sourceVersion: scope.sourceVersion }), signal: AbortSignal.timeout(voice ? 115000 : 95000) });
     const result = await response.json() as Answer & { detail?: string };
