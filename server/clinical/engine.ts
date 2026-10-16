@@ -3,12 +3,14 @@ import type { AuditEvent, ChatAnswer, Citation, ClinicalRecord, ClinicalState, C
 import { HOSPITALS, PATIENT_CANDIDATES, PATIENTS, TERMINOLOGY_MAPPINGS, sourcesForPatient } from "./fixtures";
 
 const TERMINOLOGY: Record<string, { title: string; code: string; unit: string }> = {
+  GLU_FAST: { title: "Glucose, fasting, serum/plasma", code: "1558-6", unit: "mg/dL" },
+  FAST_GLUCOSE: { title: "Glucose, fasting, serum/plasma", code: "1558-6", unit: "mg/dL" },
   "S.CREAT": { title: "Creatinine, serum", code: "2160-0", unit: "mg/dL" },
   CREAT_SER: { title: "Creatinine, serum", code: "2160-0", unit: "mg/dL" },
   Hb: { title: "Hemoglobin", code: "718-7", unit: "g/dL" },
   HGB: { title: "Hemoglobin", code: "718-7", unit: "g/dL" },
 };
-export const DEMO_DOCTOR = { id: "doctor-ananya", name: "Dr. Ananya Iyer", role: "doctor" as const, hospitalId: "B" as const, hospital: "Meridian Medical" };
+export const DEMO_DOCTOR = { id: "doctor-ananya", name: "Dr. Ananya Iyer", role: "doctor" as const, hospitalId: "B" as const, hospital: "Nisanth Hospital" };
 const now = () => new Date().toISOString();
 const hospitalName = (id: HospitalId) => HOSPITALS.find((item) => item.id === id)!.name;
 export class ClinicalError extends Error {
@@ -31,8 +33,8 @@ export function createState(patientId: string): ClinicalState {
 export function canReadForeign(state: ClinicalState): { allowed: boolean; reason: string } {
   if (state.role !== "doctor") return { allowed: false, reason: "Payer role is not permitted to access this treatment-only consent." };
   if (!state.linkedPatientId) return { allowed: false, reason: "Patient identity has not been confirmed across hospitals." };
-  if (state.consent.status !== "active") return { allowed: false, reason: "Cross-hospital consent was revoked. Only local Meridian records are available." };
-  if (Date.parse(state.consent.expiresAt) <= Date.now()) return { allowed: false, reason: "Cross-hospital consent has expired. Only local Meridian records are available." };
+  if (state.consent.status !== "active") return { allowed: false, reason: "Cross-hospital consent was revoked. Only local Hospital B records are available." };
+  if (Date.parse(state.consent.expiresAt) <= Date.now()) return { allowed: false, reason: "Cross-hospital consent has expired. Only local Hospital B records are available." };
   if (state.consent.recipient !== "Hospital B" || state.consent.purpose !== "treatment") return { allowed: false, reason: "Consent recipient or purpose does not permit this request." };
   return { allowed: true, reason: "Treatment access permitted for the selected categories. This is a synthetic demonstration consent." };
 }
@@ -98,8 +100,12 @@ export function citationsFor(records: ClinicalRecord[]): Citation[] {
 
 export function findingsFor(state: ClinicalState, records: ClinicalRecord[]): Finding[] {
   const findings: Finding[] = [];
+  const medications = records.filter(record => record.kind === "medication" && record.title === "Metformin 500 mg");
+  if (new Set(medications.map(record => record.hospitalId)).size > 1 && new Set(medications.map(record => record.text)).size > 1) findings.push({ id: "finding-medication-difference", category: "conflict", severity: "medium", title: "Metformin instructions differ", description: "The sources document different dosing instructions. This may reflect a documented change or a discrepancy; the treating doctor must verify. No dose change is recommended.", citationIds: medications.map(record => record.citationId), status: "review-required" });
+  const glucose = records.filter(record => record.code === "1558-6").sort((a, b) => Date.parse(a.clinicalDate) - Date.parse(b.clinicalDate));
+  if (new Set(glucose.map(record => record.hospitalId)).size > 1) findings.push({ id: "finding-glucose-change", category: "change", severity: "info", title: "Fasting glucose results differ across dates", description: `Recorded results: ${glucose.map(record => `${record.value} ${record.unit} (${record.clinicalDate.slice(0, 10)})`).join("; ")}. A numerical difference alone does not establish an error, diagnosis, or cause. Review test conditions and original reports.`, citationIds: glucose.map(record => record.citationId), status: "documented" });
   const allergies = records.filter((record) => record.kind === "allergy");
-  if (allergies.some((record) => record.assertion === "present") && allergies.some((record) => record.assertion === "none-known")) findings.push({ id: "finding-allergy", category: "conflict", severity: "high", title: "Allergy records disagree", description: "Aster documents a penicillin allergy; Meridian records no known allergies. Neither entry supersedes the other automatically. Clinician reconciliation required.", citationIds: allergies.map((record) => record.citationId), status: "review-required" });
+  if (allergies.some((record) => record.assertion === "present") && allergies.some((record) => record.assertion === "none-known")) findings.push({ id: "finding-allergy", category: "conflict", severity: "high", title: "Allergy records disagree", description: "Hospital A documents a penicillin allergy; Hospital B records no known allergies. Neither entry supersedes the other automatically. Clinician reconciliation required.", citationIds: allergies.map((record) => record.citationId), status: "review-required" });
   for (const note of records.filter((record) => record.kind === "note")) {
     const raw = state.sources.find((source) => source.id === note.sourceId && source.version === note.version);
     if (raw?.payload.missingAttachment) findings.push({ id: `finding-missing-${note.id}`, category: "missing", severity: "medium", title: `${String(raw.payload.missingAttachment)} not retrieved`, description: "The outpatient note refers to this attachment, but it is absent from the retrieved record set. This does not establish that the examination was never performed.", citationIds: [note.citationId], status: "review-required" });
@@ -110,7 +116,7 @@ export function findingsFor(state: ClinicalState, records: ClinicalRecord[]): Fi
     if (first.unit === last.unit) findings.push({ id: "finding-creatinine-change", category: "change", severity: "info", title: "Comparable creatinine results available", description: `Documented value changed from ${first.value} to ${last.value} ${last.unit}. Same mapped analyte and unit; review original laboratory method and reference ranges before clinical interpretation. No cause is inferred.`, citationIds: [first.citationId, last.citationId], status: "documented" });
   }
   for (const hospital of HOSPITALS) if (state.connectorStatus[hospital.id] === "unavailable") findings.push({ id: `finding-unavailable-${hospital.id}`, category: "coverage", severity: "medium", title: `${hospital.name} is unavailable`, description: "Its records are excluded from this view. This is an incomplete retrieved history; retry the connector before relying on coverage.", citationIds: [], status: "review-required" });
-  if (!canReadForeign(state).allowed) findings.push({ id: "finding-consent", category: "coverage", severity: "medium", title: "Aster records excluded", description: canReadForeign(state).reason, citationIds: [], status: "review-required" });
+  if (!canReadForeign(state).allowed) findings.push({ id: "finding-consent", category: "coverage", severity: "medium", title: "Hospital A records excluded", description: canReadForeign(state).reason, citationIds: [], status: "review-required" });
   return findings;
 }
 
@@ -223,7 +229,7 @@ export function buildFhirBundle(state: ClinicalState, records: ClinicalRecord[],
   });
   const escape = (text: string) => text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
   const composition = { resourceType: "Composition", id: `composition-${state.patientId}`, status: summary.status === "approved" ? "final" : "preliminary", type: { coding: [{ system: "http://loinc.org", code: "34133-9", display: "Summary of episode note" }] }, subject: { reference: patientUrl }, date: summary.generatedAt, author: [{ reference: clinicianUrl }], title: summary.title, confidentiality: "R", text: { status: "generated", div: `<div xmlns="http://www.w3.org/1999/xhtml"><p>SYNTHETIC DEMONSTRATION ONLY</p><pre>${escape(summary.text)}</pre></div>` }, section: [{ title: "Source records", entry: resources.map((entry) => ({ reference: entry.fullUrl })) }] };
-  return { resourceType: "Bundle", id: `bundle-${state.patientId}-${summary.sourceVersion}`, identifier: { system: "https://prototype.example/synthetic-documents", value: summary.id }, type: "document", timestamp: summary.generatedAt, entry: [ { fullUrl: `https://prototype.example/fhir/Composition/composition-${state.patientId}`, resource: composition }, { fullUrl: patientUrl, resource: { resourceType: "Patient", id: `patient-${state.patientId}`, identifier: patient.identifiers.map((identifier) => ({ system: identifier.hospital === "Aster General" ? "https://aster.example/patients" : "https://meridian.example/patients", value: identifier.value })), name: [{ text: patient.name }], gender: patient.sex.toLowerCase(), birthDate: patient.birthDate } }, { fullUrl: clinicianUrl, resource: { resourceType: "Practitioner", id: clinician.id, name: [{ text: clinician.name }] } }, ...resources ] };
+  return { resourceType: "Bundle", id: `bundle-${state.patientId}-${summary.sourceVersion}`, identifier: { system: "https://prototype.example/synthetic-documents", value: summary.id }, type: "document", timestamp: summary.generatedAt, entry: [ { fullUrl: `https://prototype.example/fhir/Composition/composition-${state.patientId}`, resource: composition }, { fullUrl: patientUrl, resource: { resourceType: "Patient", id: `patient-${state.patientId}`, identifier: patient.identifiers.map((identifier) => ({ system: identifier.hospital === "Rohit Hospital" ? "https://hospital-a.example/patients" : "https://hospital-b.example/patients", value: identifier.value })), name: [{ text: patient.name }], gender: patient.sex.toLowerCase(), birthDate: patient.birthDate } }, { fullUrl: clinicianUrl, resource: { resourceType: "Practitioner", id: clinician.id, name: [{ text: clinician.name }] } }, ...resources ] };
 }
 
 export function validateBundle(bundle: unknown): ValidationResult {

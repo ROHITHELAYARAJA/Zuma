@@ -30,6 +30,64 @@ class Speech(Scope):
     audioBase64: str = Field(min_length=1, max_length=1280000)
     sampleRate: int = 16000
 
+class ComparisonRecord(BaseModel):
+    id: str = Field(min_length=1, max_length=150)
+    recordId: str = Field(pattern=r"^record-[A-Za-z0-9_-]{1,120}$")
+    hospitalId: str = Field(pattern="^[AB]$")
+    version: int = Field(ge=1)
+    category: str = Field(pattern="^(lab|allergy|medication|note)$")
+    text: str = Field(min_length=1, max_length=18000)
+    sha256: str = Field(pattern="^[a-f0-9]{64}$")
+
+class ComparisonQuestion(BaseModel):
+    patientId: str = Field(pattern="^ravi$")
+    sourceVersion: str = Field(min_length=1, max_length=128)
+    question: str = Field(min_length=1, max_length=4000)
+    records: list[ComparisonRecord] = Field(min_length=1, max_length=80)
+
+class EvidenceObject(BaseModel):
+    key: str = Field(max_length=300)
+    metadataKey: str = Field(max_length=320)
+    html: str = Field(max_length=30000)
+    metadata: str = Field(max_length=10000)
+
+class ComparisonIngestion(BaseModel):
+    objects: list[EvidenceObject] = Field(min_length=1, max_length=80)
+
+class ComparisonSpeech(ComparisonQuestion):
+    audioBase64: str = Field(min_length=1, max_length=1280000)
+    sampleRate: int = 16000
+
+@app.post("/comparison/voice", dependencies=[Depends(authorized)])
+async def comparison_voice(body: ComparisonSpeech):
+    from .comparison import answer_comparison
+    from .voice import speech_answer
+    try:
+        pcm = base64.b64decode(body.audioBase64, validate=True)
+        if body.sampleRate != 16000 or not pcm or len(pcm) > 960000 or len(pcm) % 2:
+            raise ValueError("PCM_16KHZ_MONO_UP_TO_30_SECONDS_REQUIRED")
+        async def grounded(question):
+            return await asyncio.to_thread(answer_comparison, {**body.model_dump(), "question": question})
+        return await asyncio.wait_for(speech_answer(pcm, grounded), timeout=110)
+    except Exception as exc:
+        raise HTTPException(503, str(exc) if isinstance(exc, ValueError) else type(exc).__name__) from None
+
+@app.post("/comparison/answer", dependencies=[Depends(authorized)])
+async def comparison_answer(body: ComparisonQuestion):
+    from .comparison import answer_comparison
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(answer_comparison, body.model_dump()), timeout=100)
+    except Exception as exc:
+        raise HTTPException(503, str(exc) if isinstance(exc, ValueError) else type(exc).__name__) from None
+
+@app.post("/comparison/ingest", dependencies=[Depends(authorized)])
+async def comparison_ingest(body: ComparisonIngestion):
+    from .comparison import ingest_comparison
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(ingest_comparison, [item.model_dump() for item in body.objects]), timeout=100)
+    except Exception as exc:
+        raise HTTPException(503, str(exc) if isinstance(exc, ValueError) else type(exc).__name__) from None
+
 @app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {"service": "zuma-aws-evidence", "health": "/health", "authorization": "Clinical API service key required for patient queries"}

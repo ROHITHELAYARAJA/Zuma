@@ -10,10 +10,12 @@ import { ClinicalError, DEMO_DOCTOR, addAudit, answerQuestion, approveSummary, b
 import { authProvider, signIn, signOut, supabaseConfigured, verifyIdentity, type AuthIdentity } from "./auth";
 import { createStateStore, type StateSession, type StoredSession } from "./state-store";
 import { platformRouter } from "./platform";
+import { privateRag } from "../integrations/private-rag";
+import { canonicalRecordText, evidenceDigest, evidenceObjects } from "../integrations/ingestion";
 import { connectionConfiguration, fetchHospitalRecords, HospitalConnectorError, setHospitalAvailability } from "../integrations/hospitals";
 
 type RequestSession = StateSession & { identity: AuthIdentity };
-type JobSession = StoredSession & { ingestionJobs?: Record<string, { patientId: string; sourceVersion: string }> };
+type JobSession = StoredSession & { ingestionJobs?: Record<string, { patientId: string; sourceVersion: string }>; comparisonVersion?: number };
 const COOKIE_NAME = "synapse_demo_session";
 const patientIdSchema = z.enum(["ravi", "meera", "arjun"]);
 const hospitalIdSchema = z.enum(["A", "B"]);
@@ -140,6 +142,23 @@ export function createApp(options: { dbPath?: string } = {}) {
     return input.role === "payer" ? c.json({ role: "payer", access: { allowed: false, reason: "Treatment-only consent does not authorize a payer." }, mode: "synthetic-demo" }) : c.json(currentWorkspace(getState(session.data, input.patientId ?? "ravi")));
   });
   app.get("/api/bootstrap", async (c) => { const session = await getSession(c); return c.json(bootstrap(session.identity)); });
+  app.post("/api/comparison/session", async c => {
+    const session = await getSession(c);
+    if (session.identity.actor.role !== "doctor" || session.identity.actor.hospitalId !== "B") throw new ClinicalError(403, "ROLE_DENIED", "Hospital B clinician access is required.");
+    const data = session.data as JobSession;
+    if (data.comparisonVersion !== 1) {
+      const state = createState("ravi");
+      state.clinician = { id: session.identity.actor.id, name: session.identity.actor.name };
+      state.linkedPatientId = null;
+      state.consent.status = "revoked";
+      state.audit = [];
+      addAudit(state, "COMPARISON_DEMO_STARTED", "recorded", "Fictional two-hospital Ravi scenario. Identity review and simulated permission are required. No live ABDM exchange is claimed.");
+      data.states.ravi = state;
+      data.comparisonVersion = 1;
+      await persist(session);
+    }
+    return c.json(currentWorkspace(data.states.ravi));
+  });
   app.get("/api/pipeline/status", async (c) => {
     const session = await getSession(c);
     return c.json({ authProvider: authProvider(), stateStore: store.provider, recordProvider: apiHospitals() ? "api" : "fixtures", hospitals: connectionConfiguration(), ragProvider: process.env.RAG_PROVIDER ?? "local", aiProvider: process.env.AI_PROVIDER ?? "local", awsEnabled: process.env.AWS_CLOUD_ENABLED === "true", knowledgeBaseConfigured: Boolean(process.env.BEDROCK_KNOWLEDGE_BASE_ID && process.env.BEDROCK_DATA_SOURCE_ID), actor: session.identity.actor, notice: "Configuration is distinct from a completed transmission. Delivery receipts show actual successful hospital API exchanges." });
@@ -192,8 +211,20 @@ export function createApp(options: { dbPath?: string } = {}) {
     return c.json(currentWorkspace(state));
   });
   app.post("/api/patients/:id/chat", async (c) => {
-    const input = await body(c, z.object({ message: z.string().trim().min(1).max(4000) }));
+    const input = await body(c, z.object({ message: z.string().trim().min(1).max(4000), requireKnowledgeBase: z.boolean().default(false) }));
     let session = await getSession(c), state = getState(session.data, c.req.param("id"));
+    if (input.requireKnowledgeBase && !canReadForeign(state).allowed) throw new ClinicalError(403, "CONSENT_REQUIRED", "Confirm patient identity and grant valid permission before asking about both hospitals.");
+    if (input.requireKnowledgeBase && process.env.RAG_SERVICE_URL) {
+      const version = sourceVersion(state), { records } = retrieve(state);
+      const result = await privateRag("/comparison/answer", { patientId: state.patientId, sourceVersion: version, question: input.message, records: records.map(record => ({ id: record.citationId, recordId: record.id, hospitalId: record.hospitalId, version: record.version, category: record.kind, text: canonicalRecordText(record), sha256: evidenceDigest(record) })) });
+      const fresh = await freshUnchanged(c, state.patientId, version);
+      const available = new Map(citationsFor(records).map(citation => [citation.id, citation]));
+      if (result.sourceVersion !== version || typeof result.answer !== "string" || !Array.isArray(result.evidenceIds) || result.evidenceIds.some((id: unknown) => typeof id !== "string" || !available.has(id))) throw new ClinicalError(503, "UNVERIFIED_CITATIONS", "The answer sources could not be verified.");
+      addAudit(fresh.state, "CROSS_HOSPITAL_AWS_ANSWER", "allowed", "Patient identity, current permission and AWS evidence source membership checked.");
+      await persist(fresh.session);
+      return c.json({ id: randomUUID(), mode: "bedrock-kb", answer: result.answer, citations: result.evidenceIds.map((id: string) => available.get(id)), warning: "AWS-retrieved fictional evidence. Doctor review required; no treatment recommendation." });
+    }
+    if (input.requireKnowledgeBase && process.env.RAG_PROVIDER !== "bedrock-kb") throw new ClinicalError(503, "KNOWLEDGE_BASE_REQUIRED", "Cross-hospital AI requires the AWS knowledge base. No local answer was substituted.");
     let answer = answerQuestion(state, input.message);
     if (process.env.AI_PROVIDER === "bedrock" || process.env.RAG_PROVIDER === "bedrock-kb") {
       const version = sourceVersion(state), { records } = retrieve(state);
@@ -203,6 +234,7 @@ export function createApp(options: { dbPath?: string } = {}) {
           const { retrieveKnowledgeEvidence } = await import("../integrations/knowledge-base");
           const retrieved = await retrieveKnowledgeEvidence({ question: input.message, patientId: state.patientId, records });
           evidence = retrieved.evidence;
+          if (!evidence.length) throw new ClinicalError(503, "NO_VERIFIED_EVIDENCE", "No current permitted evidence was found in the knowledge base. Synchronize these demonstration records before asking again.");
           await freshUnchanged(c, state.patientId, version);
         }
         const { generateGroundedAnswer } = await import("../integrations/bedrock");
@@ -219,6 +251,29 @@ export function createApp(options: { dbPath?: string } = {}) {
       }
     }
     await persist(session); return c.json(answer);
+  });
+  app.post("/api/comparison/ingest", async c => {
+    const session = await getSession(c), state = getState(session.data, "ravi"); requireDoctor(state);
+    if (!canReadForeign(state).allowed) throw new ClinicalError(403, "CONSENT_REQUIRED", "Confirm identity and permission before indexing the demonstration evidence.");
+    const version = sourceVersion(state), { records } = retrieve(state);
+    const result = await privateRag("/comparison/ingest", { objects: records.map(record => evidenceObjects(state.patientId, record)) });
+    const fresh = await freshUnchanged(c, state.patientId, version);
+    addAudit(fresh.state, "COMPARISON_INGESTION_STARTED", "recorded", `AWS ingestion job ${result.jobId}; completion has not yet been verified.`);
+    await persist(fresh.session);
+    return c.json({ ...result, ready: false });
+  });
+  app.post("/api/comparison/voice", async c => {
+    const input = await body(c, z.object({ audioBase64: z.string().min(1).max(1280000), sampleRate: z.literal(16000) }));
+    const session = await getSession(c), state = getState(session.data, "ravi"); requireDoctor(state);
+    if (!canReadForeign(state).allowed) throw new ClinicalError(403, "CONSENT_REQUIRED", "Confirm identity and permission before a voice question.");
+    const version = sourceVersion(state), { records } = retrieve(state);
+    const result = await privateRag("/comparison/voice", { ...input, question: "Voice question", patientId: "ravi", sourceVersion: version, records: records.map(record => ({ id: record.citationId, recordId: record.id, hospitalId: record.hospitalId, version: record.version, category: record.kind, text: canonicalRecordText(record), sha256: evidenceDigest(record) })) });
+    const fresh = await freshUnchanged(c, "ravi", version);
+    const available = new Map(citationsFor(records).map(citation => [citation.id, citation]));
+    if (result.sourceVersion !== version || typeof result.answer !== "string" || !Array.isArray(result.evidenceIds) || result.evidenceIds.some((id: unknown) => typeof id !== "string" || !available.has(id))) throw new ClinicalError(503, "UNVERIFIED_CITATIONS", "Voice answer sources could not be verified.");
+    addAudit(fresh.state, "CROSS_HOSPITAL_AWS_VOICE", "allowed", "Voice used the same permitted evidence and source-version checks as text.");
+    await persist(fresh.session);
+    return c.json({ id: randomUUID(), answer: result.answer, mode: "bedrock-kb", citations: result.evidenceIds.map((id: string) => available.get(id)), warning: "AI draft from fictional evidence. Doctor review required.", transcript: result.transcript, audioBase64: result.audioBase64, audioContentType: result.audioContentType });
   });
   app.post("/api/patients/:id/ingest", async (c) => {
     const session = await getSession(c), state = getState(session.data, c.req.param("id"));

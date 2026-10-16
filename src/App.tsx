@@ -33,6 +33,7 @@ import AuthForm, { type AuthConfiguration } from "./AuthForm";
 import { Badge, Busy, CitationButtons, Empty, Modal } from "./components";
 import { ConflictBanner, SummaryPanel, TimelinePanel } from "./ClinicalPanels";
 import RecordChat from "./RecordChat";
+import ComparisonPanel from "../web/ComparisonPanel";
 import {
   AuditPage,
   ConsentPage,
@@ -57,7 +58,7 @@ const navigation = [
   { id: "audit", label: "Audit trail", icon: ScrollText },
 ] as const;
 
-export default function App() {
+export default function App({ comparison = false }: { comparison?: boolean } = {}) {
   const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [w, setW] = useState<Workspace | null>(null);
   const [patientId, setPatientId] = useState("ravi");
@@ -91,10 +92,11 @@ export default function App() {
       }
       if (configuration.provider === "demo") await post("/demo/session");
       const boot = await api<Bootstrap>("/bootstrap");
+      if (comparison) boot.patients = boot.patients.filter(patient => patient.id === "ravi");
       setBootstrap(boot);
       const id = boot.patients[0]?.id || "ravi";
       setPatientId(id);
-      setW(await api<Workspace>(`/patients/${id}/workspace`));
+      setW(comparison ? await post<Workspace>("/comparison/session") : await api<Workspace>(`/patients/${id}/workspace`));
       setAuthenticationRequired(false);
     } catch (err) {
       setError((err as Error).message);
@@ -260,7 +262,7 @@ export default function App() {
           }}
         >
           <span>
-            Clinical
+            Zuma
             <br />
             workspace
           </span>
@@ -354,6 +356,7 @@ export default function App() {
           </button>
         </header>
         <main className="main-content">
+          {comparison && <div className="notice-strip" style={{ marginBottom: 16 }}><p><strong>Two hospitals. One fictional patient.</strong> Simulated exchange and hospital records; separate from the public NHA samples. <a href="/workspace">Open repository patients ↗</a></p></div>}
           <section className="patient-header" aria-label="Current patient">
             <div className="patient-title">
               <h1>{w.patient.name}</h1>
@@ -364,7 +367,7 @@ export default function App() {
                 <span />
                 MRN {w.patient.identifiers.at(-1)?.value || "—"}
                 <span />
-                Linked records:{" "}
+                {comparison && !w.access.allowed ? "Source identifiers (link/access pending):" : "Linked records:"}{" "}
                 {w.patient.identifiers.map((p) => p.value).join(", ")}
               </p>
             </div>
@@ -395,6 +398,7 @@ export default function App() {
             <Busy label="Checking the permitted records…" />
           ) : page === "workspace" ? (
             <>
+              {comparison && <ComparisonPanel workspace={w} busy={busy} onOpen={id => void openRecord(id)} onIdentity={() => setPage("matching")} onConsent={() => setPage("consent")} onReview={() => setDialog("review")} />}
               {!w.records.length && <div className="notice-strip" style={{ margin: "0 0 12px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}><p>Retrieve the permitted hospital records to begin this patient’s review.</p><button className="button primary small" onClick={() => setPage("integration")}>Open hospital retrieval</button></div>}
               <ConflictBanner
                 workspace={w}
@@ -419,6 +423,7 @@ export default function App() {
                   openRecord={(id) => void openRecord(id)}
                 />
                 <RecordChat
+                  requireKnowledgeBase={comparison}
                   workspace={w}
                   onOpen={(id) => void openRecord(id)}
                 />

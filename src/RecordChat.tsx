@@ -41,9 +41,11 @@ interface Message {
 export default function RecordChat({
   workspace: w,
   onOpen,
+  requireKnowledgeBase = false,
 }: {
   workspace: Workspace;
   onOpen: (id: string) => void;
+  requireKnowledgeBase?: boolean;
 }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -52,6 +54,8 @@ export default function RecordChat({
   const [notice, setNotice] = useState(false);
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const voiceStop = useRef<((send?: boolean) => void) | null>(null);
+  const cloudAudio = useRef<HTMLAudioElement | null>(null);
   const generation = useRef(0);
   const recognition = useRef<BrowserRecognition | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
@@ -59,6 +63,8 @@ export default function RecordChat({
   const signature = `${w.patient.id}|${w.consent.version}|${w.records.map((r) => `${r.id}-${r.version}`).join(",")}|${w.hospitals.map((h) => h.status).join(",")}`;
   useEffect(() => {
     generation.current++;
+    voiceStop.current?.(false);
+    cloudAudio.current?.pause();
     setMessages([]);
     setInput("");
     setSending(false);
@@ -74,6 +80,8 @@ export default function RecordChat({
   useEffect(
     () => () => {
       generation.current++;
+      voiceStop.current?.(false);
+      cloudAudio.current?.pause();
       recognition.current?.abort();
       window.speechSynthesis?.cancel();
     },
@@ -89,7 +97,7 @@ export default function RecordChat({
     try {
       const response = await post<ChatAnswer>(
         `/patients/${w.patient.id}/chat`,
-        { message: text },
+        { message: text, requireKnowledgeBase },
       );
       if (generation.current === version)
         setMessages((previous) => [...previous, { question: text, response }]);
@@ -101,6 +109,37 @@ export default function RecordChat({
     } finally {
       if (generation.current === version) setSending(false);
     }
+  }
+  async function cloudMic() {
+    if (listening) { voiceStop.current?.(); return; }
+    if (sending || !w.access.allowed) { setError("Confirm identity and permission before speaking."); return; }
+    const version = generation.current;
+    try {
+      const media = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 }, video: false });
+      if (generation.current !== version) { media.getTracks().forEach(track => track.stop()); return; }
+      const context = new AudioContext(), source = context.createMediaStreamSource(media), processor = context.createScriptProcessor(4096, 1, 1), mute = context.createGain();
+      const chunks: Float32Array[] = []; mute.gain.value = 0; source.connect(processor); processor.connect(mute); mute.connect(context.destination);
+      processor.onaudioprocess = event => chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+      let stopped = false;
+      const stop = (send = true) => {
+        if (stopped) return; stopped = true; clearTimeout(timer); processor.disconnect(); source.disconnect(); mute.disconnect(); media.getTracks().forEach(track => track.stop()); setListening(false);
+        const samples = new Float32Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0)); let at = 0;
+        for (const chunk of chunks) { samples.set(chunk, at); at += chunk.length; }
+        const ratio = context.sampleRate / 16000, pcm = new Int16Array(Math.floor(samples.length / ratio));
+        for (let i = 0; i < pcm.length; i++) pcm[i] = Math.round(Math.max(-1, Math.min(1, samples[Math.floor(i * ratio)])) * 32767);
+        void context.close();
+        if (!send || generation.current !== version || !pcm.length) return;
+        const bytes = new Uint8Array(pcm.buffer); let binary = "";
+        for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+        setSending(true); setError("");
+        void post<ChatAnswer & { transcript: string; audioBase64?: string; audioContentType?: string }>("/comparison/voice", { audioBase64: btoa(binary), sampleRate: 16000 }).then(response => {
+          if (generation.current !== version) return;
+          setMessages(previous => [...previous, { question: response.transcript || "Voice question", response }]);
+          if (response.audioBase64) { const player = new Audio(`data:${response.audioContentType};base64,${response.audioBase64}`); cloudAudio.current = player; void player.play().catch(() => setError("The answer is ready; automatic audio playback was blocked.")); }
+        }).catch(error => { if (generation.current === version) setError((error as Error).message); }).finally(() => { if (generation.current === version) setSending(false); });
+      };
+      const timer = setTimeout(() => stop(), 20000); voiceStop.current = stop; setListening(true);
+    } catch (error) { setError((error as Error).message); }
   }
   function startMic() {
     setNotice(false);
@@ -173,11 +212,11 @@ export default function RecordChat({
           <strong>
             {["bedrock", "bedrock-kb"].includes(messages.at(-1)?.response.mode ?? "")
               ? "Amazon Bedrock"
-              : "Local evidence engine"}
+              : requireKnowledgeBase ? "Zuma · source-linked answers" : "Structured evidence answers"}
           </strong>
           <span>
             <span className="status-dot" />
-            Ready
+            {requireKnowledgeBase && !messages.length ? "Evidence check required" : "Ready"}
           </span>
         </div>
         <p>Answers use only the permitted patient records shown here.</p>
@@ -231,9 +270,9 @@ export default function RecordChat({
                     {message.response.citations.map((c) => (
                       <button key={c.id} onClick={() => onOpen(c.recordId)}>
                         <span
-                          className={`hospital-dot hospital-${c.hospital.includes("Aster") ? "A" : "B"}`}
+                          className={`hospital-dot hospital-${w.records.find(record => record.id === c.recordId)?.hospitalId ?? "B"}`}
                         >
-                          {c.hospital.includes("Aster") ? "A" : "B"}
+                          {w.records.find(record => record.id === c.recordId)?.hospitalId ?? "B"}
                         </span>
                         <span>
                           <strong>{c.title}</strong>
@@ -297,9 +336,10 @@ export default function RecordChat({
               type="button"
               className={`voice-button ${listening ? "listening" : ""}`}
               aria-label={
-                listening ? "Stop listening" : "Use browser microphone"
+                listening ? "Stop listening" : requireKnowledgeBase ? "Ask Zuma by voice" : "Use browser microphone"
               }
               onClick={() => {
+                if (requireKnowledgeBase) { void cloudMic(); return; }
                 if (listening) recognition.current?.stop();
                 else setNotice(true);
               }}
@@ -319,7 +359,7 @@ export default function RecordChat({
         <div className="composer-caption">
           <span>
             <Mic size={12} />
-            Browser voice · not AWS
+            {requireKnowledgeBase ? "Voice question · same permission checks" : "Browser voice · not AWS"}
           </span>
           <span>Enter to send</span>
         </div>

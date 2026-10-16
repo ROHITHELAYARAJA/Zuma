@@ -21,3 +21,4 @@ deployment/*.env
 __pycache__/
 *.egg-info/
 .next-verify/
+.next-compare/
