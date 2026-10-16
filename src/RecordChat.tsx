@@ -117,9 +117,10 @@ export default function RecordChat({
     if (sending || !w.access.allowed) { setError("Confirm identity and permission before speaking."); return; }
     const version = generation.current;
     try {
-      const media = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 }, video: false });
+      const media = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
       if (generation.current !== version) { media.getTracks().forEach(track => track.stop()); return; }
       const context = new AudioContext(), source = context.createMediaStreamSource(media), processor = context.createScriptProcessor(4096, 1, 1), mute = context.createGain();
+      await context.resume();
       const chunks: Float32Array[] = []; mute.gain.value = 0; source.connect(processor); processor.connect(mute); mute.connect(context.destination);
       processor.onaudioprocess = event => chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
       let stopped = false;
@@ -137,7 +138,6 @@ export default function RecordChat({
         void post<ChatAnswer & { transcript: string; audioBase64?: string; audioContentType?: string }>("/comparison/voice", { audioBase64: btoa(binary), sampleRate: 16000 }).then(response => {
           if (generation.current !== version) return;
           setMessages(previous => [...previous, { question: response.transcript || "Voice question", response }]);
-          if (response.audioBase64) { const player = new Audio(`data:${response.audioContentType};base64,${response.audioBase64}`); cloudAudio.current = player; void player.play().catch(() => setError("The answer is ready; automatic audio playback was blocked.")); }
         }).catch(error => { if (generation.current === version) setError((error as Error).message); }).finally(() => { if (generation.current === version) setSending(false); });
       };
       const timer = setTimeout(() => stop(), 20000); voiceStop.current = stop; setListening(true);
@@ -293,6 +293,7 @@ export default function RecordChat({
                   {speaking ? "Stop playback" : "Read aloud"}
                 </button>
                 <p className="answer-warning">{message.response.warning}</p>
+                {message.response.audioBase64 && <audio aria-label="Spoken answer" controls autoPlay ref={element => { if (element) cloudAudio.current = element; }} src={`data:${message.response.audioContentType ?? "audio/wav"};base64,${message.response.audioBase64}`} style={{width:"100%",marginTop:12}} />}
               </div>
             </div>
           </div>

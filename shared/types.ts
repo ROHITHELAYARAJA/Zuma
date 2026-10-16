@@ -94,6 +94,8 @@ export interface ClinicalSummary {
 }
 
 export interface ChatAnswer {
+  audioBase64?: string;
+  audioContentType?: string;
   id: string;
   answer: string;
   citations: Citation[];

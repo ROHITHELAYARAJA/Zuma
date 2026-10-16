@@ -6,7 +6,6 @@ import os
 import re
 import uuid
 import wave
-import boto3
 from aws_sdk_bedrock_runtime.client import AsyncBedrockRuntimeClient
 from aws_sdk_bedrock_runtime.config import AsyncBedrockRuntimeConfig
 from aws_sdk_bedrock_runtime.models import BidirectionalInputPayloadPart, InvokeModelWithBidirectionalStreamInputChunk, InvokeModelWithBidirectionalStreamOperationInput, InvokeModelWithBidirectionalStreamOutputChunk
@@ -113,31 +112,18 @@ async def speech_answer(pcm, evidence_answer):
     if not transcript:
         raise ValueError("NO_VERIFIED_USER_TRANSCRIPT")
     answer = await evidence_answer(transcript)
-    short = answer["answer"]
+    short = re.sub(r"\[\d+\]", "", answer["answer"]).replace("•", "").strip()
     if len(short) > 4000:
         return {**answer, "transcript": transcript, "audioBase64": "", "audioContentType": "audio/wav", "voiceNotice": "Answer too long for verified speech. Read the cited text."}
-    provider = os.environ.get("VOICE_OUTPUT_PROVIDER", "polly")
-    if provider == "nova-strict":
-        voiced = await exchange(text=short)
-        normalize = lambda value: re.sub(r"[^\w]", "", value).casefold()
-        matching = [turn for turn in voiced["turns"] if normalize(turn["text"]) == normalize(short) and turn["audio"]]
-        if not matching:
-            raise ValueError("SPOKEN_RESPONSE_DID_NOT_MATCH_VERIFIED_TEXT")
-        audio = matching[0]["audio"]
-        rate = 24000
-    elif provider == "polly":
-        def render():
-            client = boto3.client("polly", region_name=os.environ.get("AWS_REGION", "us-east-1"))
-            output = bytearray()
-            for start in range(0, len(short), 2500):
-                response = client.synthesize_speech(Text=short[start:start+2500], TextType="text", OutputFormat="pcm", SampleRate="16000", VoiceId=os.environ.get("POLLY_VOICE_ID", "Joanna"), Engine="standard")
-                with response["AudioStream"] as stream:
-                    output.extend(stream.read())
-            return bytes(output)
-        audio = await asyncio.to_thread(render)
-        rate = 16000
-    else:
-        raise ValueError("INVALID_VOICE_OUTPUT_PROVIDER")
+    provider = "nova-strict"
+    voiced = await exchange(text=short)
+    normalize = lambda value: re.sub(r"[^\w]", "", value).casefold()
+    turns = [turn for turn in voiced["turns"] if turn["audio"]]
+    spoken_text = " ".join(turn["text"] for turn in turns)
+    if not turns or normalize(spoken_text) != normalize(short):
+        raise ValueError("SPOKEN_RESPONSE_DID_NOT_MATCH_VERIFIED_TEXT")
+    audio = b"".join(turn["audio"] for turn in turns)
+    rate = 24000
     wav = io.BytesIO()
     with wave.open(wav, "wb") as file:
         file.setnchannels(1)
