@@ -542,7 +542,7 @@ export default function App({ comparison = false }: { comparison?: boolean } = {
       {dialog === "services" && (
         <Modal
           title="System & provider status"
-          subtitle="This session runs on synthetic records. Cloud services are never shown as connected unless configured."
+          subtitle="Deployment and configuration details. Completed transfers and answers verify individual requests."
           wide
           onClose={() => setDialog(null)}
         >
@@ -791,7 +791,7 @@ function ReviewDialog({
           </select>
         </div>
         <p>
-          FHIR export uses local structural checks. Full ABDM profile
+          FHIR export uses server-side structural checks. Full ABDM profile
           certification is not provided.
         </p>
       </div>

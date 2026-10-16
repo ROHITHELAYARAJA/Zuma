@@ -594,29 +594,28 @@ export function ServicesPanel({ bootstrap }: { bootstrap: Bootstrap }) {
       <div className="panel-heading">
         <h2>
           <Database size={19} />
-          Connected services
+          Service configuration
         </h2>
-        <Badge tone="amber">Local demonstration</Badge>
+        <Badge tone="amber">{bootstrap.services.some(service => service.status === "deployed") ? "Deployed prototype" : "Development prototype"}</Badge>
       </div>
       <div className="service-list">
         {bootstrap.services.map((service) => (
           <div key={service.name}>
             <span
-              className={`service-status ${service.status === "local" ? "online" : ""}`}
+              className={`service-status ${service.status !== "not-configured" ? "online" : ""}`}
             />
             <div>
               <strong>{service.name}</strong>
               <p>{service.detail}</p>
             </div>
-            <Badge tone={service.status === "local" ? "mint" : "muted"}>
-              {service.status === "local" ? "Local" : "Not configured"}
+            <Badge tone={service.status !== "not-configured" ? "mint" : "muted"}>
+              {{local:"Development",deployed:"Deployed",configured:"Configured",browser:"Browser", "not-configured":"Not configured"}[service.status]}
             </Badge>
           </div>
         ))}
       </div>
       <p className="panel-footnote">
-        No live hospital, ABDM, or cloud connection is implied by this demo. Use
-        synthetic data only.
+        Cloud-hosted prototype using fictional comparison records and public repository samples. Hospital exchange is simulated; official ABDM connectivity and approval are not claimed. Transfer receipts and cited answers show completed operations.
       </p>
     </section>
   );

@@ -151,7 +151,7 @@ export interface Bootstrap {
   actor: { id: string; name: string; role: "doctor"; hospitalId: "B"; hospital: string };
   patients: PatientOverview[];
   hospitals: { id: HospitalId; name: string; format: string }[];
-  services: { name: string; status: "local" | "not-configured"; detail: string }[];
+  services: { name: string; status: "local" | "deployed" | "configured" | "browser" | "not-configured"; detail: string }[];
   session: { syntheticOnly: true; authentication: "opaque-demo-cookie" | "supabase-http-only"; productionReady: false };
 }
 
