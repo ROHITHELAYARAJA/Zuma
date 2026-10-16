@@ -85,7 +85,10 @@ def answer_comparison(payload):
         if not isinstance(support, list) or len(support) != len(claims) or any(value is not True for value in support):
             raise ValueError("SUMMARY_REQUIRES_EVIDENCE_REVIEW")
     answer = "\n\n".join(section["heading"] + "\n" + "\n".join(claim["text"] + " " + " ".join("[" + i + "]" for i in claim["evidenceIds"]) for claim in section["claims"]) for section in sections if section["claims"])
-    return {"answer": answer or "The permitted retrieved evidence does not answer this question. Missing evidence is not a negative finding.", "evidenceIds": list(dict.fromkeys(i for claim in claims for i in claim["evidenceIds"])), "sourceVersion": payload["sourceVersion"], "mode": "bedrock-kb"}
+    ordered_ids = list(dict.fromkeys(i for claim in claims for i in claim["evidenceIds"]))
+    for number, evidence_id in enumerate(ordered_ids, 1):
+        answer = answer.replace("[" + evidence_id + "]", "[" + str(number) + "]")
+    return {"answer": answer or "The permitted retrieved evidence does not answer this question. Missing evidence is not a negative finding.", "evidenceIds": ordered_ids, "sourceVersion": payload["sourceVersion"], "mode": "bedrock-kb"}
 
 
 def ingest_comparison(objects):

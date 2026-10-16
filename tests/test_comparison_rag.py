@@ -33,6 +33,8 @@ class ComparisonRetrievalTests(unittest.TestCase):
         self.assertEqual(answer["evidenceIds"], [self.record["id"]])
         self.assertEqual(answer["sourceVersion"], "version-1")
         self.assertEqual(answer["mode"], "bedrock-kb")
+        self.assertIn("[1]", answer["answer"])
+        self.assertNotIn("cite-b-medication-02", answer["answer"])
 
     def test_unsupported_claim_fails_closed(self):
         self.matches(self.metadata)

@@ -10,7 +10,13 @@ export async function privateRag(path: string, payload: unknown) {
   const result = await response.json();
   if (!response.ok) {
     const detail = typeof result.detail === "string" ? result.detail : "The evidence service could not verify this request.";
-    throw new ClinicalError(503, "EVIDENCE_SERVICE_FAILED", detail.startsWith("COMPARISON_CONFIGURATION_REQUIRED:") ? `The Python service needs the existing project's ${detail.split(":")[1]} setting before indexing can run.` : detail);
+    const messages: Record<string, string> = {
+      NO_VERIFIED_KNOWLEDGE_BASE_EVIDENCE: "No current permitted evidence was retrieved. Check indexing status and try a specific question; no local answer was substituted.",
+      SUMMARY_REQUIRES_EVIDENCE_REVIEW: "The draft could not be fully supported by its sources. Ask a more specific question or inspect the original records.",
+      NO_VERIFIED_USER_TRANSCRIPT: "The voice question was not understood. Please try again or type your question.",
+      MODEL_RESPONSE_INCOMPLETE: "The answer was interrupted before verification. Please try again.",
+    };
+    throw new ClinicalError(503, "EVIDENCE_SERVICE_FAILED", detail.startsWith("COMPARISON_CONFIGURATION_REQUIRED:") ? `The Python service needs the existing project's ${detail.split(":")[1]} setting before indexing can run.` : messages[detail] ?? detail);
   }
   return result;
 }
