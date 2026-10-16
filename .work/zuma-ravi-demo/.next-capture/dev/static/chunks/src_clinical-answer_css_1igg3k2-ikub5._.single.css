@@ -1,0 +1,35 @@
+/* [project]/src/clinical-answer.css [app-client] (css) */
+.clinical-answer {
+  color: #171717;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+
+.clinical-answer section + section {
+  border-top: 1px solid #ded9d0;
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+}
+
+.clinical-answer h4 {
+  margin: 0 0 .5rem;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.clinical-answer ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style: outside;
+}
+
+.clinical-answer li + li {
+  margin-top: .65rem;
+}
+
+.clinical-answer p {
+  margin: 0;
+}
+
+/*# sourceMappingURL=src_clinical-answer_css_1igg3k2-ikub5._.single.css.map*/

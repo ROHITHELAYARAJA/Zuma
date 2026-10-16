@@ -1,0 +1,21 @@
+{"timestamp":"00:00:02.665","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:02.666","source":"Server","level":"LOG","message":"  We detected TypeScript in your project and reconfigured your tsconfig.json file for you."}
+{"timestamp":"00:00:02.666","source":"Server","level":"LOG","message":"  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:\n"}
+{"timestamp":"00:00:02.666","source":"Server","level":"LOG","message":"  \t- include was updated to add '.work/zuma-ravi-demo/.next-capture/types/**/*.ts'"}
+{"timestamp":"00:00:02.667","source":"Server","level":"LOG","message":"  \t- include was updated to add '.work/zuma-ravi-demo/.next-capture/dev/types/**/*.ts'"}
+{"timestamp":"00:00:02.667","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:03.592","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:08.299","source":"Server","level":"LOG","message":"○ Compiling /workspace/compare ..."}
+{"timestamp":"00:00:47.928","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:02:21.414","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:06:52.232","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:11:05.248","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:14:17.977","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:15:59.125","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:36:43.507","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:39:14.548","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:55:15.939","source":"Server","level":"LOG","message":"✓ Compiled in 5.6s"}
+{"timestamp":"01:26:37.217","source":"Server","level":"LOG","message":"✓ Compiled in 3s"}
+{"timestamp":"01:36:35.019","source":"Server","level":"LOG","message":"✓ Compiled in 5.3s"}
+{"timestamp":"01:37:09.726","source":"Server","level":"LOG","message":"✓ Compiled in 2.9s"}
+{"timestamp":"01:47:04.650","source":"Server","level":"LOG","message":"✓ Compiled in 7.1s"}

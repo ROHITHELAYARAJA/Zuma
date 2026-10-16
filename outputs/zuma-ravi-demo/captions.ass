@@ -1,0 +1,19 @@
+[Script Info]
+Title: ZUMA - Ravi synthetic local demo
+ScriptType: v4.00+
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+PlayResX: 1920
+PlayResY: 1080
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: SideLabel,Arial,27,&H0057CFF5,&H0000FFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:06.50,SideLabel,,0,0,0,,{\an7\pos(24,450)}RAVI KUMAR\NFICTIONAL\NLOCAL DEMO
+Dialogue: 0,0:00:06.50,0:00:13.50,SideLabel,,0,0,0,,{\an7\pos(24,450)}SCOPED\NTREATMENT\NCONSENT
+Dialogue: 0,0:00:13.50,0:00:23.50,SideLabel,,0,0,0,,{\an7\pos(24,450)}SOURCE\NCONFLICTS\NSURFACED
+Dialogue: 0,0:00:23.50,0:00:34.00,SideLabel,,0,0,0,,{\an7\pos(24,450)}DATED\NEVIDENCE\NNOT DIAGNOSIS
+Dialogue: 0,0:00:34.00,0:00:45.00,SideLabel,,0,0,0,,{\an7\pos(24,450)}CLINICIAN\NREVIEW\NREQUIRED

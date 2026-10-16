@@ -28,9 +28,21 @@ const faq = [
 export default function Landing({ reports }: { reports: PublicReport[] }) {
   const [feature, setFeature] = useState(0);
   const [menu, setMenu] = useState(false);
+  const [cookieChoice, setCookieChoice] = useState<"pending" | "accepted" | "rejected">("pending");
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const ActiveIcon = features[feature].icon;
+
+  useEffect(() => {
+    const savedChoice = window.localStorage.getItem("zuma-cookie-consent");
+    if (savedChoice === "accepted" || savedChoice === "rejected") setCookieChoice(savedChoice);
+  }, []);
+
+  function saveCookieChoice(choice: "accepted" | "rejected") {
+    window.localStorage.setItem("zuma-cookie-consent", choice);
+    setCookieChoice(choice);
+  }
 
   useEffect(() => {
     if (reduced !== false) return;
@@ -119,6 +131,52 @@ export default function Landing({ reports }: { reports: PublicReport[] }) {
           ease: "power2.out",
           scrollTrigger: { trigger: ".lp-provenance", start: "top 82%", once: true },
         });
+        gsap.fromTo(".lp-provenance-graph", { x: 35, autoAlpha: 0, rotate: 1.5 }, {
+          x: 0,
+          autoAlpha: 1,
+          rotate: 0,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".lp-provenance-graph", start: "top 86%", once: true },
+        });
+        gsap.to(".lp-graph-legend i", {
+          scale: 1.45,
+          opacity: 0.55,
+          duration: 1.2,
+          stagger: 0.18,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+        gsap.fromTo(".lp-privacy-grid article", { y: 28, autoAlpha: 0 }, {
+          y: 0,
+          autoAlpha: 1,
+          duration: 0.65,
+          stagger: 0.14,
+          ease: "power2.out",
+          scrollTrigger: { trigger: ".lp-privacy-grid", start: "top 84%", once: true },
+        });
+        gsap.fromTo(".lp-faq details", { x: 24, autoAlpha: 0 }, {
+          x: 0,
+          autoAlpha: 1,
+          duration: 0.55,
+          stagger: 0.09,
+          ease: "power2.out",
+          scrollTrigger: { trigger: ".lp-faq", start: "top 84%", once: true },
+        });
+        gsap.fromTo(".lp-final > *", { y: 24, autoAlpha: 0 }, {
+          y: 0,
+          autoAlpha: 1,
+          duration: 0.7,
+          stagger: 0.1,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".lp-final", start: "top 82%", once: true },
+        });
+        gsap.fromTo(".lp-footer", { autoAlpha: 0 }, {
+          autoAlpha: 1,
+          duration: 0.8,
+          scrollTrigger: { trigger: ".lp-footer", start: "top 94%", once: true },
+        });
         media.add("(min-width: 1100px) and (prefers-reduced-motion: no-preference)", () => {
           plugin.ScrollTrigger.create({ trigger: ".lp-workflow", start: "top 110px", end: "bottom bottom", pin: ".lp-workflow-intro", pinSpacing: false });
         });
@@ -139,6 +197,16 @@ export default function Landing({ reports }: { reports: PublicReport[] }) {
     <main>
       <section className="lp-hero">
         <div className="lp-hero-copy"><div className="lp-eyebrow"><span /> A clearer handoff starts here</div><h1>Every record.<br />One clear<br /><span>picture.</span><i className="lp-spark" aria-hidden="true">✳</i></h1><p>Different hospitals. Different histories. Bring the evidence together, so doctors can see what matters—and where it came from.</p><div className="lp-hero-actions"><Link className="lp-button" href="/workspace">Open Zuma workspace <ArrowUpRight size={22} /></Link><a className="lp-text-link" href="#workflow">Explore the workflow <ArrowDown size={17} /></a></div><div className="lp-hero-note">made for the humans<br />behind the records <span aria-hidden="true">↗</span></div></div>
+        <div className="lp-hero-wheel" aria-hidden="true">
+          <svg viewBox="0 0 120 120" role="presentation">
+            <circle className="lp-wheel-ring" cx="60" cy="60" r="47" />
+            <g className="lp-wheel-spokes">
+              <path d="M60 13v24M60 83v24M13 60h24M83 60h24M26.8 26.8l17 17M76.2 76.2l17 17M93.2 26.8l-17 17M43.8 76.2l-17 17" />
+            </g>
+            <circle className="lp-wheel-core" cx="60" cy="60" r="13" />
+            <circle className="lp-wheel-dot" cx="60" cy="60" r="4" />
+          </svg>
+        </div>
         <div className="lp-hero-art" aria-label="Connect, understand and review patient records">
           <svg className="lp-orbits" viewBox="0 0 600 620" aria-hidden="true"><ellipse cx="300" cy="315" rx="270" ry="150" transform="rotate(-28 300 315)" /><ellipse cx="300" cy="315" rx="265" ry="160" transform="rotate(45 300 315)" /><circle cx="300" cy="315" r="230" /></svg>
           <motion.div className="lp-float-card lp-connect" initial={false} whileHover={reduced ? {} : { rotate: -3, y: -8 }}><span className="lp-card-index">01 / CONNECT</span><Layers3 size={34} strokeWidth={1.7} /><strong>Two sources.<br />Clear boundaries.</strong><span>Keep the source. Connect the story.</span></motion.div>
@@ -170,6 +238,24 @@ export default function Landing({ reports }: { reports: PublicReport[] }) {
 
       <section className="lp-final"><span className="lp-eyebrow">LESS FRAGMENTATION. MORE UNDERSTANDING.</span><h2>Let&apos;s connect<br />the whole story<span className="lp-final-star" aria-hidden="true">✳</span></h2><Link href="/workspace" className="lp-button lp-button-white">Open Zuma workspace <ArrowUpRight size={23} /></Link><p>Explore public sample records. Keep the doctor in control.</p><div className="lp-story-links"><a href="#preview">Patient & source</a><ArrowRight size={15}/><a href="#evidence">Clinical resources</a><ArrowRight size={15}/><Link href="/workspace">Doctor review</Link><a href="https://github.com/NHA-ABDM/ABDM-wrapper" target="_blank" rel="noreferrer">NHA source repository ↗</a></div></section>
     </main>
-    <footer className="lp-footer"><Link href="/" className="lp-logo"><span className="lp-logo-mark"><Plus size={22} strokeWidth={3} /></span><span>Zuma</span></Link><p>Healthcare interoperability, with evidence.<br /><span>Repository sample prototype · PS-013 · Zuma</span></p><a href="#privacy">Privacy & prototype scope <ArrowUpRight size={15} /></a></footer>
+    <footer className="lp-footer"><Link href="/" className="lp-logo"><span className="lp-logo-mark"><Plus size={22} strokeWidth={3} /></span><span>Zuma</span></Link><p>Healthcare interoperability, with evidence.<br /><span>Repository sample prototype · PS-013 · Zuma</span></p><button className="lp-footer-policy" type="button" onClick={() => setPrivacyOpen(true)}>Privacy policy <ArrowUpRight size={15} /></button></footer>
+    {cookieChoice === "pending" && <aside className="lp-cookie-banner" aria-label="Cookie consent">
+      <div><span className="lp-cookie-label">YOUR PRIVACY</span><h2>Cookies, clearly explained.</h2><p>We use essential storage to remember your consent and keep this prototype working. Optional analytics cookies are off unless you choose to accept them.</p></div>
+      <div className="lp-cookie-actions"><button className="lp-cookie-link" type="button" onClick={() => setPrivacyOpen(true)}>Privacy policy</button><button className="lp-cookie-reject" type="button" onClick={() => saveCookieChoice("rejected")}>Reject non-essential</button><button className="lp-cookie-accept" type="button" onClick={() => saveCookieChoice("accepted")}>Accept all cookies <ArrowUpRight size={16} /></button></div>
+    </aside>}
+    {privacyOpen && <div className="lp-policy-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPrivacyOpen(false); }}>
+      <section className="lp-policy-dialog" role="dialog" aria-modal="true" aria-labelledby="lp-policy-title">
+        <button className="lp-policy-close" type="button" onClick={() => setPrivacyOpen(false)} aria-label="Close privacy policy"><X size={20} /></button>
+        <span className="lp-cookie-label">PRIVACY POLICY / COOKIE NOTICE</span>
+        <h2 id="lp-policy-title">Clear about what we keep.</h2>
+        <p className="lp-policy-intro">Zuma is a prototype for consent-based clinical record interoperability. We keep this site intentionally simple and do not sell personal information.</p>
+        <div className="lp-policy-points">
+          <article><h3>Essential storage</h3><p>We store your cookie choice in this browser so we do not show the banner on every visit. This preference contains no clinical information.</p></article>
+          <article><h3>Optional cookies</h3><p>Optional analytics cookies are not active by default. “Accept all cookies” allows them if they are introduced later; “Reject non-essential” keeps them disabled.</p></article>
+          <article><h3>Clinical data</h3><p>Public sample records and workspace access are handled separately from this consent banner. Never enter real patient information into this prototype.</p></article>
+        </div>
+        <div className="lp-policy-footer"><span>Last updated: October 2026</span><button className="lp-cookie-accept" type="button" onClick={() => { saveCookieChoice("accepted"); setPrivacyOpen(false); }}>Accept all cookies <ArrowUpRight size={16} /></button></div>
+      </section>
+    </div>}
   </div>;
 }

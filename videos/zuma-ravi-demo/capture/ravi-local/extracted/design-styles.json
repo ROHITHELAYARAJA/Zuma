@@ -1,0 +1,57 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Space Grotesk Variable",
+      "fontSize": "25px",
+      "fontWeight": "650",
+      "lineHeight": "31.25px",
+      "letterSpacing": "-0.9px",
+      "color": "#111111",
+      "sampleText": "Clinical workspace"
+    },
+    {
+      "role": "body",
+      "fontFamily": "DM Sans Variable",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "lineHeight": "17.6px",
+      "letterSpacing": "normal",
+      "color": "#7D3025",
+      "sampleText": "Request origin is not permitted."
+    }
+  ],
+  "spacing": {
+    "observed": [
+      8,
+      10,
+      24
+    ],
+    "baseUnit": 8
+  },
+  "radius": [],
+  "shadows": [],
+  "buttons": [
+    {
+      "label": "Try again",
+      "background": "#111111",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "9px 13px",
+      "borderRadius": "4px",
+      "border": "1px solid rgb(17, 17, 17)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "550",
+      "height": "36px"
+    }
+  ],
+  "cards": [],
+  "nav": null,
+  "chips": [],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [],
+  "glass": []
+}

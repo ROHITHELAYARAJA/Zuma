@@ -1,0 +1,4 @@
+{
+  "/api/[...path]/route": "app/api/[...path]/route.js",
+  "/workspace/compare/page": "app/workspace/compare/page.js"
+}

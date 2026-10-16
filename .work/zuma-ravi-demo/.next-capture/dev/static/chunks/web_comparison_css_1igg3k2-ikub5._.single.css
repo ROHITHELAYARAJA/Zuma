@@ -1,0 +1,204 @@
+/* [project]/web/comparison.css [app-client] (css) */
+.zuma-comparison {
+  color: #111;
+  background: #fff;
+  border: 1px solid #dcd7cd;
+  border-radius: 14px;
+  margin-bottom: 24px;
+  padding: 24px;
+}
+
+.comparison-heading {
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  display: flex;
+}
+
+.comparison-heading h2 {
+  margin: 8px 0;
+  font-size: 28px;
+}
+
+.comparison-heading p {
+  color: #444;
+  margin: 0;
+}
+
+.comparison-heading a {
+  color: #111;
+  font-size: 13px;
+  text-decoration: underline;
+}
+
+.comparison-flow {
+  grid-template-columns: 1fr 24px 1fr 24px 1fr;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 12px;
+  display: grid;
+}
+
+.comparison-flow article {
+  background: #f5faff;
+  border: 1px solid #111;
+  border-radius: 10px;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 112px;
+  padding: 18px;
+  display: flex;
+}
+
+.comparison-flow article:last-child {
+  background: #fff4ed;
+}
+
+.comparison-flow .comparison-center {
+  background: #ffde4a;
+  box-shadow: 3px 3px #111;
+}
+
+.comparison-flow small {
+  color: #333;
+  font-size: 12px;
+}
+
+.comparison-flow > span {
+  text-align: center;
+  font-size: 24px;
+}
+
+.comparison-disclosure {
+  color: #454545;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.comparison-features {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+}
+
+.comparison-features li {
+  background: #f6f4ef;
+  border-radius: 6px;
+  padding: 9px;
+  font-size: 12px;
+}
+
+.comparison-features li span {
+  color: #9b330c;
+  margin-right: 6px;
+  font-weight: 700;
+}
+
+.comparison-controls {
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  display: flex;
+}
+
+.comparison-access {
+  color: #43340a;
+  background: #fff8dc;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.comparison-table-wrap {
+  overflow-x: auto;
+}
+
+.comparison-table-wrap table {
+  border-collapse: collapse;
+  text-align: left;
+  width: 100%;
+  font-size: 13px;
+}
+
+.comparison-table-wrap caption {
+  text-align: left;
+  color: #333;
+  padding: 10px 0;
+  font-weight: 600;
+}
+
+.comparison-table-wrap th, .comparison-table-wrap td {
+  vertical-align: top;
+  border: 1px solid #ddd7ce;
+  min-width: 145px;
+  padding: 13px;
+}
+
+.comparison-table-wrap thead th {
+  background: #ffde4a;
+}
+
+.comparison-source {
+  text-align: left;
+  cursor: pointer;
+  color: #111;
+  font: inherit;
+  background: none;
+  border: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  display: flex;
+}
+
+.comparison-source:hover strong {
+  text-underline-offset: 4px;
+  -webkit-text-decoration: underline #e04526;
+  text-decoration: underline #e04526;
+}
+
+.comparison-source small {
+  color: #4b4b4b;
+}
+
+.comparison-footnote {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  display: flex;
+}
+
+@media (max-width: 760px) {
+  .zuma-comparison {
+    padding: 16px;
+  }
+
+  .comparison-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .comparison-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-flow > span {
+    transform: rotate(90deg);
+  }
+
+  .comparison-heading h2 {
+    font-size: 23px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .app-shell .brand:before {
+    content: "Z";
+  }
+}
+
+/*# sourceMappingURL=web_comparison_css_1igg3k2-ikub5._.single.css.map*/

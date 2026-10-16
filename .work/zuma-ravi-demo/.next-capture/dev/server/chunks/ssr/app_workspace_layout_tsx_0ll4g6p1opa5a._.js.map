@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/erohi/OneDrive/Desktop/Zuma/app/workspace/layout.tsx"],"sourcesContent":["import type { Metadata } from 'next';\nimport '../../src/styles.css';\nexport const metadata: Metadata = { title: 'Patient review' };\nexport default function WorkspaceLayout({children}:{children:React.ReactNode}){return children;}\n"],"names":["metadata","title","WorkspaceLayout","children"],"mappings":";;;;;;;AAEO,MAAMA,WAAqB;IAAEC,OAAO;AAAiB;AAC7C,SAASC,gBAAgB,EAACC,QAAQ,EAA4B;IAAE,OAAOA;AAAS"}}]
+}

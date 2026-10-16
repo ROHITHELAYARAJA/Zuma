@@ -1,0 +1,348 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Space Grotesk Variable",
+      "fontSize": "34px",
+      "fontWeight": "600",
+      "lineHeight": "42.5px",
+      "letterSpacing": "-1px",
+      "color": "#111111",
+      "sampleText": "Ravi Kumar"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Space Grotesk Variable",
+      "fontSize": "28px",
+      "fontWeight": "650",
+      "lineHeight": "42px",
+      "letterSpacing": "-0.25px",
+      "color": "#111111",
+      "sampleText": "Ravi’s records, together."
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "Space Grotesk Variable",
+      "fontSize": "19px",
+      "fontWeight": "600",
+      "lineHeight": "28.5px",
+      "letterSpacing": "-0.5px",
+      "color": "#111111",
+      "sampleText": "Clinical summary"
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "Space Grotesk Variable",
+      "fontSize": "17px",
+      "fontWeight": "650",
+      "lineHeight": "25.5px",
+      "letterSpacing": "-0.25px",
+      "color": "#111111",
+      "sampleText": "Result history"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "Space Grotesk Variable",
+      "fontSize": "15px",
+      "fontWeight": "650",
+      "lineHeight": "22.5px",
+      "letterSpacing": "normal",
+      "color": "#111111",
+      "sampleText": "Source coverage"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "Space Grotesk Variable",
+      "fontSize": "15px",
+      "fontWeight": "550",
+      "lineHeight": "22.5px",
+      "letterSpacing": "normal",
+      "color": "#111111",
+      "sampleText": "Allergy documentation"
+    },
+    {
+      "role": "link",
+      "fontFamily": "Space Grotesk Variable",
+      "fontSize": "15px",
+      "fontWeight": "700",
+      "lineHeight": "22.5px",
+      "letterSpacing": "-0.5px",
+      "color": "#FFFFFF",
+      "sampleText": "Zumaworkspace"
+    },
+    {
+      "role": "body",
+      "fontFamily": "DM Sans Variable",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "lineHeight": "23.1px",
+      "letterSpacing": "normal",
+      "color": "#444444",
+      "sampleText": "Compare dated source statements. Keep the doctor in control."
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "DM Sans Variable",
+      "fontSize": "11.2px",
+      "fontWeight": "400",
+      "lineHeight": "16.8px",
+      "letterSpacing": "normal",
+      "color": "#111111",
+      "sampleText": "Required once when this scenario is new to the knowledge bas"
+    },
+    {
+      "role": "label",
+      "fontFamily": "DM Sans Variable",
+      "fontSize": "11px",
+      "fontWeight": "450",
+      "lineHeight": "16.5px",
+      "letterSpacing": "normal",
+      "color": "#666666",
+      "sampleText": "ZUMA · CROSS-HOSPITAL REVIEW"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      1,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "baseUnit": 4
+  },
+  "radius": [
+    "4px",
+    "5px",
+    "7px",
+    "20px"
+  ],
+  "shadows": [
+    {
+      "value": "rgb(17, 17, 17) 3px 3px 0px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Workspace",
+      "background": "#FFD84D",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#111111",
+      "padding": "0px 15px 0px 16px",
+      "borderRadius": "4px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "13px",
+      "fontWeight": "400",
+      "height": "44px"
+    },
+    {
+      "label": "AIDr. Ananya IyerHospital B · Demo clini",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "16px 18px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "87px"
+    },
+    {
+      "label": "Workspace",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#666666",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(102, 102, 102)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "height": "18px"
+    },
+    {
+      "label": "Search for a patient by name, MRN or ID⌘",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#666666",
+      "padding": "0px 11px",
+      "borderRadius": "4px",
+      "border": "1px solid rgb(238, 238, 238)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "height": "40px"
+    },
+    {
+      "label": "Review & export",
+      "background": "#111111",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "0px 14px",
+      "borderRadius": "5px",
+      "border": "2px solid rgb(17, 17, 17)",
+      "boxShadow": "none",
+      "fontSize": "13px",
+      "fontWeight": "550",
+      "height": "44px"
+    },
+    {
+      "label": "1. Review patient identity",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#111111",
+      "padding": "6px 9px",
+      "borderRadius": "4px",
+      "border": "1px solid rgb(188, 188, 188)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "550",
+      "height": "29px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#F5FAFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#111111",
+      "padding": "18px",
+      "borderRadius": "10px",
+      "border": "1px solid rgb(17, 17, 17)",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "114px"
+    },
+    {
+      "label": "card",
+      "background": "#FFDE4A",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#111111",
+      "padding": "18px",
+      "borderRadius": "10px",
+      "border": "1px solid rgb(17, 17, 17)",
+      "boxShadow": "rgb(17, 17, 17) 3px 3px 0px 0px",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "114px"
+    },
+    {
+      "label": "card",
+      "background": "#FFF4ED",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#111111",
+      "padding": "18px",
+      "borderRadius": "10px",
+      "border": "1px solid rgb(17, 17, 17)",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "114px"
+    },
+    {
+      "label": "card",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#111111",
+      "padding": "16px",
+      "borderRadius": "6px",
+      "border": "1px solid rgb(222, 222, 222)",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "817px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "transparent",
+    "backgroundImage": "",
+    "backdropFilter": "",
+    "color": "#FFFFFF",
+    "padding": "0px 10px",
+    "borderRadius": "0px",
+    "border": "0px solid rgb(255, 255, 255)",
+    "boxShadow": "none",
+    "fontSize": "14px",
+    "fontWeight": "400",
+    "height": "248px"
+  },
+  "chips": [
+    {
+      "label": "Unavailable",
+      "background": "#F3F3F3",
+      "color": "#555555",
+      "padding": "5px 9px",
+      "borderRadius": "20px",
+      "border": "0px none rgb(85, 85, 85)",
+      "boxShadow": "none",
+      "fontSize": "8px",
+      "fontWeight": "500",
+      "height": "20.7969px"
+    },
+    {
+      "label": "Available",
+      "background": "#FFD84D",
+      "color": "#111111",
+      "padding": "5px 9px",
+      "borderRadius": "20px",
+      "border": "0px none rgb(255, 216, 77)",
+      "boxShadow": "none",
+      "fontSize": "8px",
+      "fontWeight": "500",
+      "height": "20.7969px"
+    },
+    {
+      "label": "Evidence draft",
+      "background": "#FFD84D",
+      "color": "#111111",
+      "padding": "4px 7px",
+      "borderRadius": "3px",
+      "border": "1px solid rgb(255, 216, 77)",
+      "boxShadow": "none",
+      "fontSize": "9px",
+      "fontWeight": "500",
+      "height": "22.1406px"
+    },
+    {
+      "label": "Source",
+      "background": "#F0F0F0",
+      "color": "#333333",
+      "padding": "4px 6px",
+      "borderRadius": "5px",
+      "border": "0px none rgb(222, 222, 222)",
+      "boxShadow": "none",
+      "fontSize": "9px",
+      "fontWeight": "400",
+      "height": "19.25px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [],
+  "glass": []
+}
