@@ -13,6 +13,8 @@ import {
 import type { ChatAnswer, Workspace } from "../shared/types";
 import { post } from "./lib/api";
 import { Modal, Busy } from "./components";
+import ClinicalAnswer from "./ClinicalAnswer";
+import "./clinical-answer.css";
 
 interface SpeechResult {
   0: { transcript: string };
@@ -263,7 +265,7 @@ export default function RecordChat({
                 <Sparkles size={17} />
               </span>
               <div className="assistant-message">
-                <p>{message.response.answer}</p>
+                <ClinicalAnswer text={message.response.answer} />
                 {message.response.citations.length > 0 && (
                   <div className="chat-sources">
                     <span className="label">Sources</span>
