@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, FileText, Layers3, Mic, Plus, ShieldCheck, Sparkles, X } from "lucide-react";
 import RepositoryStory, { type PublicReport } from "./RepositoryStory";
+import WhyZuma from "./WhyZuma";
 import "./landing.css";
 import "./repository-story.css";
 
@@ -131,7 +132,7 @@ export default function Landing({ reports }: { reports: PublicReport[] }) {
     <header className="lp-header">
       <Link href="/" className="lp-logo" aria-label="Zuma home"><span className="lp-logo-mark"><Plus size={23} strokeWidth={3} /></span><span>Zuma</span></Link>
       <button className="lp-menu" onClick={() => setMenu(!menu)} aria-expanded={menu} aria-label="Toggle navigation">{menu ? <X /> : <span>Menu <Plus size={16} /></span>}</button>
-      <nav className={menu ? "lp-nav lp-nav-open" : "lp-nav"} aria-label="Main navigation"><a href="#features" onClick={() => setMenu(false)}>The features</a><a href="#workflow" onClick={() => setMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMenu(false)}>Built with care</a><Link href="/setup">Setup</Link><a href="#evidence">Source explorer</a></nav>
+      <nav className={menu ? "lp-nav lp-nav-open" : "lp-nav"} aria-label="Main navigation"><a href="#features" onClick={() => setMenu(false)}>The features</a><a href="#workflow" onClick={() => setMenu(false)}>How it works</a><a href="#why-zuma" onClick={() => setMenu(false)}>Why Zuma</a><Link href="/setup">Setup</Link><a href="#evidence">Source explorer</a></nav>
       <Link className="lp-nav-cta" href="/workspace">Enter workspace <ArrowUpRight size={17} /></Link>
     </header>
 
@@ -160,6 +161,8 @@ export default function Landing({ reports }: { reports: PublicReport[] }) {
       <section className="lp-features" id="features"><div className="lp-section-heading lp-reveal"><div><div className="lp-eyebrow">THE TOOLKIT / 02</div><h2>Seven features.<br />One connected flow.</h2></div><p>Useful at the moment a doctor needs the next piece of the story.</p></div><div className="lp-feature-layout"><div className="lp-feature-visual"><span className="lp-card-index">{String(feature + 1).padStart(2, "0")} / {features[feature].name.toUpperCase()}</span><ActiveIcon size={78} strokeWidth={1.15} /><h3>{features[feature].name}<span>the story.</span></h3><div className="lp-visual-rule" /><p>Evidence first.<br />The doctor always in control.</p></div><div className="lp-accordion">{features.map((item, index) => <article key={item.name} className={feature === index ? "lp-feature-item lp-feature-active" : "lp-feature-item"}><h3><button aria-expanded={feature === index} aria-controls={`lp-feature-${index}`} onClick={() => setFeature(index)}><span>{String(index + 1).padStart(2, "0")}</span>{item.title}<Plus className={feature === index ? "lp-plus-active" : ""} size={20} /></button></h3><div id={`lp-feature-${index}`} hidden={feature !== index}><p>{item.body}</p><Link href="/workspace">Try it in the workspace <ArrowUpRight size={15} /></Link></div></article>)}</div></div></section>
 
       <section className="lp-provenance" id="evidence"><div className="lp-provenance-copy lp-reveal"><div className="lp-eyebrow">FOLLOW THE EVIDENCE / 03</div><h2>Nothing floats<br/>without a source.</h2><p>A patient identity belongs to a source document. Each clinical resource stays attached to that document. Zuma checks permission before using it in an answer.</p><div className="lp-graph-legend"><span><i/> Patient</span><span><i/> FHIR document</span><span><i/> Clinical resource</span></div><a className="lp-button" href="#preview">Explore the original records <ArrowUpRight size={18}/></a><span className="lp-dark-note">Two distinct patients. Their histories are never merged.</span></div><div className="lp-provenance-graph"><RepositoryStory reports={reports} graph/></div></section>
+
+      <WhyZuma/>
 
       <section className="lp-privacy" id="privacy"><div className="lp-privacy-heading"><ShieldCheck size={40} strokeWidth={1.4} /><h2>Built with care.<br />Clear about its limits.</h2></div><div className="lp-privacy-grid"><article><h3>Permission before access.</h3><p>Server-side checks protect the demonstration workflow. Revocation blocks subsequent retrieval; it cannot undo a previous download.</p></article><article><h3>Uncertainty stays visible.</h3><p>Missing records and contradictory statements remain explicit. A summary never claims to include a hospital that could not be reached.</p></article><article><h3>A prototype, honestly.</h3><p>Public repository samples, authenticated clinician access and demonstration report grants. Official FHIR validation and live hospital exchange remain pending.</p></article></div></section>
 
