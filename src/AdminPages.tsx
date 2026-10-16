@@ -349,7 +349,7 @@ export function ConsentPage({
           </p>
           <p>
             <AlertTriangle size={16} />
-            This is a local consent simulation, not an ABDM consent-manager
+            This is a deployed consent simulation, not an ABDM consent-manager
             integration.
           </p>
         </div>
@@ -427,7 +427,7 @@ export function IntegrationPage({
           <h1>Integration lab</h1>
           <p>
             Inspect hospital adapters, terminology mappings, and the limits of
-            local validation.
+            server-side structural validation.
           </p>
         </div>
       </header>
@@ -544,7 +544,7 @@ export function IntegrationPage({
           {result && (
             <div className="validation-result">
               <Badge tone={result.valid ? "mint" : "coral"}>
-                {result.valid ? "Local checks passed" : "Validation failed"}
+                {result.valid ? "Structural checks passed" : "Validation failed"}
               </Badge>
               {result.checks.map((c, i) => (
                 <p key={i}>

@@ -33,8 +33,8 @@ export function createState(patientId: string): ClinicalState {
 export function canReadForeign(state: ClinicalState): { allowed: boolean; reason: string } {
   if (state.role !== "doctor") return { allowed: false, reason: "Payer role is not permitted to access this treatment-only consent." };
   if (!state.linkedPatientId) return { allowed: false, reason: "Patient identity has not been confirmed across hospitals." };
-  if (state.consent.status !== "active") return { allowed: false, reason: "Cross-hospital consent was revoked. Only local Hospital B records are available." };
-  if (Date.parse(state.consent.expiresAt) <= Date.now()) return { allowed: false, reason: "Cross-hospital consent has expired. Only local Hospital B records are available." };
+  if (state.consent.status !== "active") return { allowed: false, reason: "Cross-hospital consent was revoked. Only Hospital B’s own records are available." };
+  if (Date.parse(state.consent.expiresAt) <= Date.now()) return { allowed: false, reason: "Cross-hospital consent has expired. Only Hospital B’s own records are available." };
   if (state.consent.recipient !== "Hospital B" || state.consent.purpose !== "treatment") return { allowed: false, reason: "Consent recipient or purpose does not permit this request." };
   return { allowed: true, reason: "Treatment access permitted for the selected categories. This is a synthetic demonstration consent." };
 }
@@ -250,7 +250,7 @@ export function validateBundle(bundle: unknown): ValidationResult {
     { label: "All document references resolve internally", passed: references.length > 0 && references.every((reference) => urls.includes(reference)) },
     { label: "Observation quantities have code and units", passed: entries.filter((entry) => entry.resource?.resourceType === "Observation").every((entry) => { const r = entry.resource!; const q = r.valueQuantity as Record<string, unknown> | undefined; return Boolean(r.status && r.code && r.subject && r.effectiveDateTime && q && typeof q.value === "number" && q.system === "http://unitsofmeasure.org" && q.code); }) },
   ];
-  return { valid: checks.every((check) => check.passed), errors: checks.filter((check) => !check.passed).map((check) => check.label), checks, level: "local-structural-checks", notice: "Local structural checks only. Full HL7 FHIR R4 and version-pinned ABDM profile validation require an external HL7 validator before real exchange. This prototype does not claim ABDM conformance." };
+  return { valid: checks.every((check) => check.passed), errors: checks.filter((check) => !check.passed).map((check) => check.label), checks, level: "local-structural-checks", notice: "Server-side structural checks only. Full HL7 FHIR R4 and version-pinned ABDM profile validation require an external HL7 validator before real exchange. This prototype does not claim ABDM conformance." };
 }
 
 export function exportSummary(state: ClinicalState, format: "fhir" | "html" | "markdown") {
