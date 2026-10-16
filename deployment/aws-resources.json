@@ -1,0 +1,7 @@
+{
+  "AWS_REGION": "us-east-1",
+  "BEDROCK_KNOWLEDGE_BASE_ID": "LZASC0PVMX",
+  "BEDROCK_DATA_SOURCE_ID": "OYF0748ZJG",
+  "S3_REPORT_BUCKET": "clinical-abdm-storage-evidencebucket-ekn4qgrb6rwz",
+  "S3_KMS_KEY_ID": "arn:aws:kms:us-east-1:050922968627:key/9d376e4b-2e89-45ea-be2c-ccf55709d8cf"
+}

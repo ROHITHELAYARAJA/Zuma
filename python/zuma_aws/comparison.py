@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import re
+from pathlib import Path
 import boto3
 from botocore.config import Config
 from .rag import model_json, validate_draft
@@ -12,8 +13,22 @@ COMPARISON_ENVIRONMENT = ("BEDROCK_KNOWLEDGE_BASE_ID", "BEDROCK_DATA_SOURCE_ID",
 def required(name):
     value = os.environ.get(name, "").strip()
     if not value:
+        path = Path(os.environ.get("ZUMA_PROJECT_ROOT", str(Path.cwd()))) / "deployment/aws-resources.json"
+        if path.is_file():
+            value = json.loads(path.read_text(encoding="utf-8")).get(name, "")
+    if not value:
         raise ValueError("COMPARISON_CONFIGURATION_REQUIRED:" + name)
     return value
+
+
+def missing_configuration():
+    missing = []
+    for name in COMPARISON_ENVIRONMENT:
+        try:
+            required(name)
+        except ValueError:
+            missing.append(name)
+    return missing
 
 
 def session():

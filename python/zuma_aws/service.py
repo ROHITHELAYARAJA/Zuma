@@ -94,8 +94,8 @@ def root():
 
 @app.get("/health")
 def health():
-    from .comparison import COMPARISON_ENVIRONMENT
-    return {"ok": True, "service": "zuma-aws", "awsConfigured": bool(os.environ.get("BEDROCK_KNOWLEDGE_BASE_ID")), "comparisonMissingConfiguration": [name for name in COMPARISON_ENVIRONMENT if not os.environ.get(name, "").strip()], "cloudConnectionTested": False, "answerFormat": "concise-cited-clinical-brief-v4", "textModel": os.environ.get("BEDROCK_TEXT_MODEL_ID"), "retrievalProvider": "bedrock-managed", "answerContext": "AWS retrieval results only", "citationValidation": "scoped-source-allowlist-v2"}
+    from .comparison import missing_configuration
+    return {"ok": True, "service": "zuma-aws", "awsConfigured": bool(os.environ.get("BEDROCK_KNOWLEDGE_BASE_ID")), "comparisonMissingConfiguration": missing_configuration(), "cloudConnectionTested": False, "answerFormat": "concise-cited-clinical-brief-v4", "textModel": os.environ.get("BEDROCK_TEXT_MODEL_ID"), "retrievalProvider": "bedrock-managed", "answerContext": "AWS retrieval results only", "citationValidation": "scoped-source-allowlist-v2"}
 
 @app.post("/answer", dependencies=[Depends(authorized)])
 async def answer(body: Question):
