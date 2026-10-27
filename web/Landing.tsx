@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, FileText, Layers3, Mic, Plus, ShieldCheck, Sparkles, X } from "lucide-react";
 import RepositoryStory, { type PublicReport } from "./RepositoryStory";
@@ -231,6 +232,24 @@ export default function Landing({ reports }: { reports: PublicReport[] }) {
       <section className="lp-provenance" id="evidence"><div className="lp-provenance-copy lp-reveal"><div className="lp-eyebrow">FOLLOW THE EVIDENCE / 03</div><h2>Nothing floats<br/>without a source.</h2><p>A patient identity belongs to a source document. Each clinical resource stays attached to that document. Zuma checks permission before using it in an answer.</p><div className="lp-graph-legend"><span><i/> Patient</span><span><i/> FHIR document</span><span><i/> Clinical resource</span></div><a className="lp-button" href="#preview">Explore the original records <ArrowUpRight size={18}/></a><span className="lp-dark-note">Two distinct patients. Their histories are never merged.</span></div><div className="lp-provenance-graph"><RepositoryStory reports={reports} graph/></div></section>
 
       <WhyZuma/>
+
+      <section className="lp-sources" id="sources" aria-labelledby="lp-sources-title">
+        <div className="lp-section-heading lp-reveal">
+          <div><div className="lp-eyebrow">OUR DEMO SOURCES</div><h2 id="lp-sources-title">See the sources.<br />Check for yourself.</h2></div>
+          <p>Open the public samples and the health-record guide. See what we used to learn and build.</p>
+        </div>
+        <div className="lp-source-grid">
+          <a className="lp-source-link" href="https://github.com/NHA-ABDM/ABDM-wrapper" target="_blank" rel="noopener noreferrer">
+            <span className="lp-source-logo"><Image src="/references/github-logo.png" alt="GitHub logo" width={58} height={58} /></span>
+            <div><h3>NHA GitHub samples</h3><p>NHA is India&apos;s National Health Authority. This public project has sample records and test tools.</p><span className="lp-source-action">Open the sample repository <ArrowUpRight size={17} /></span></div>
+          </a>
+          <a className="lp-source-link" href="https://nrces.in/ndhm/fhir/r4/" target="_blank" rel="noopener noreferrer">
+            <span className="lp-source-logo lp-source-logo-dark"><Image src="/references/abdm-logo.png" alt="Ayushman Bharat Digital Mission logo" width={72} height={66} /></span>
+            <div><h3>ABDM health-record guide</h3><p>ABDM is the Ayushman Bharat Digital Mission. Its guide shows a common format for health records.</p><span className="lp-source-action">Open the official guide <ArrowUpRight size={17} /></span></div>
+          </a>
+        </div>
+        <p className="lp-source-note">These logos identify our reference sources. ZUMA is a sample-data prototype, not an official ABDM service.</p>
+      </section>
 
       <section className="lp-privacy" id="privacy"><div className="lp-privacy-heading"><ShieldCheck size={40} strokeWidth={1.4} /><h2>Built with care.<br />Clear about its limits.</h2></div><div className="lp-privacy-grid"><article><h3>Permission before access.</h3><p>Server-side checks protect the demonstration workflow. Revocation blocks subsequent retrieval; it cannot undo a previous download.</p></article><article><h3>Uncertainty stays visible.</h3><p>Missing records and contradictory statements remain explicit. A summary never claims to include a hospital that could not be reached.</p></article><article><h3>A prototype, honestly.</h3><p>Public repository samples, authenticated clinician access and demonstration report grants. Official FHIR validation and live hospital exchange remain pending.</p></article></div></section>
 
