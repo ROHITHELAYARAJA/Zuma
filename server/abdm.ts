@@ -1,5 +1,6 @@
 import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
+import { evidenceRequest } from "../integrations/evidence-transport";
 import { isDeepStrictEqual } from "node:util";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -111,8 +112,9 @@ export function createAbdmRouter(hooks: { getSession: (c: Context) => Promise<Se
     if (!process.env.RAG_SERVICE_URL) throw new ClinicalError(503, "RAG_SERVICE_NOT_CONFIGURED", "The evidence service is unavailable. No local answer was substituted.");
     const target = new URL(process.env.RAG_SERVICE_URL);
     if (!["http:", "https:"].includes(target.protocol) || target.username || target.password) throw new ClinicalError(503, "INVALID_RAG_SERVICE_URL", "Invalid Python service origin.");
-    const response = await fetch(new URL(voice ? "/voice" : "/answer", target), { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ ...parsed.data, reportId: scope.report.reportId, patientId: scope.report.patientId, sourceVersion: scope.sourceVersion }), signal: AbortSignal.timeout(voice ? 115000 : 95000) });
-    const result = await response.json() as Answer & { detail?: string };
+    const upstream = await evidenceRequest(new URL(voice ? "/voice" : "/answer", target), key, { ...parsed.data, reportId: scope.report.reportId, patientId: scope.report.patientId, sourceVersion: scope.sourceVersion });
+    const response = upstream.response;
+    const result = upstream.result as Answer & { detail?: string };
     if (!response.ok) throw new ClinicalError(503, "EVIDENCE_SERVICE_FAILED", result.detail || "The AWS evidence request failed. No answer was released.");
     const fresh = await load(c); requireAccess(fresh);
     if (fresh.sourceVersion !== scope.sourceVersion || result.sourceVersion !== scope.sourceVersion) throw new ClinicalError(409, "ACCESS_CHANGED", "Records or permission changed during generation. No answer was released.");
